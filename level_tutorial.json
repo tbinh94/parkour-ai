@@ -1,0 +1,52 @@
+{
+  "sections": [
+    {
+      "type": "straight",
+      "length": 600,
+      "platform_y": 360,
+      "obstacles": [
+        { "x": 250, "y": "ground", "kind": "fake" },
+        { "x": 450, "y": "ground", "kind": "real" }
+      ]
+    },
+    {
+      "type": "straight",
+      "length": 500,
+      "platform_y": 360,
+      "obstacles": [
+        { "x": 200, "y": "ground", "kind": "real" },
+        { "x": 380, "y": "ground", "kind": "fake" }
+      ]
+    },
+    {
+      "type": "branch",
+      "branch_x": 1120,
+      "paths": [
+        {
+          "offset_y": 0,
+          "length": 400,
+          "obstacles": [
+            { "x": 150, "y": "ground", "kind": "fake" },
+            { "x": 300, "y": "ground", "kind": "real" }
+          ]
+        },
+        {
+          "offset_y": -110,
+          "length": 400,
+          "obstacles": [
+            { "x": 200, "y": "ground", "kind": "fake" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "straight",
+      "length": 500,
+      "platform_y": 360,
+      "obstacles": [
+        { "x": 180, "y": "ground", "kind": "real" },
+        { "x": 350, "y": "ground", "kind": "fake" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "sections": [
+    {
+      "type": "straight",
+      "length": 500,
+      "platform_y": 360,
+      "obstacles": [
+        { "x": 150, "y": "ground", "kind": "real" },
+        { "x": 250, "y": "ground", "kind": "fake" },
+        { "x": 380, "y": "ground", "kind": "real" }
+      ]
+    },
+    {
+      "type": "branch",
+      "branch_x": 520,
+      "paths": [
+        {
+          "offset_y": 0,
+          "length": 400,
+          "obstacles": [
+            { "x": 80, "y": "ground", "kind": "real" },
+            { "x": 180, "y": "ground", "kind": "fake" },
+            { "x": 280, "y": "ground", "kind": "real" }
+          ]
+        },
+        {
+          "offset_y": -140,
+          "length": 400,
+          "obstacles": [
+            { "x": 120, "y": "ground", "kind": "fake" },
+            { "x": 250, "y": "ground", "kind": "real" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "straight",
+      "length": 600,
+      "platform_y": 360,
+      "obstacles": [
+        { "x": 100, "y": "ground", "kind": "fake" },
+        { "x": 220, "y": "ground", "kind": "real" },
+        { "x": 340, "y": "ground", "kind": "fake" },
+        { "x": 480, "y": "ground", "kind": "real" }
+      ]
+    },
+    {
+      "type": "branch",
+      "branch_x": 1520,
+      "paths": [
+        {
+          "offset_y": 0,
+          "length": 350,
+          "obstacles": [
+            { "x": 60, "y": "ground", "kind": "real" },
+            { "x": 140, "y": "ground", "kind": "real" },
+            { "x": 220, "y": "ground", "kind": "fake" }
+          ]
+        },
+        {
+          "offset_y": -120,
+          "length": 350,
+          "obstacles": [
+            { "x": 100, "y": "ground", "kind": "fake" },
+            { "x": 200, "y": "ground", "kind": "real" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "straight",
+      "length": 400,
+      "platform_y": 360,
+      "obstacles": [
+        { "x": 150, "y": "ground", "kind": "real" },
+        { "x": 300, "y": "ground", "kind": "real" }
+      ]
+    }
+  ]
+}

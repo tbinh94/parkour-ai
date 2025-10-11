@@ -1,0 +1,127 @@
+{
+  "sections": [
+    {
+      "type": "straight",
+      "length": 400,
+      "platform_y": 360,
+      "obstacles": [
+        { "x": 100, "y": "ground", "kind": "real" },
+        { "x": 200, "y": "ground", "kind": "real" },
+        { "x": 300, "y": "ground", "kind": "fake" }
+      ]
+    },
+    {
+      "type": "branch",
+      "branch_x": 420,
+      "paths": [
+        {
+          "offset_y": 0,
+          "length": 550,
+          "obstacles": [
+            { "x": 80, "y": "ground", "kind": "real" },
+            { "x": 160, "y": "ground", "kind": "fake" },
+            { "x": 240, "y": "ground", "kind": "real" },
+            { "x": 340, "y": "ground", "kind": "real" },
+            { "x": 450, "y": "ground", "kind": "fake" }
+          ]
+        },
+        {
+          "offset_y": -150,
+          "length": 550,
+          "obstacles": [
+            { "x": 110, "y": "ground", "kind": "fake" },
+            { "x": 210, "y": "ground", "kind": "real" },
+            { "x": 310, "y": "ground", "kind": "fake" },
+            { "x": 420, "y": "ground", "kind": "real" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "straight",
+      "length": 600,
+      "platform_y": 360,
+      "obstacles": [
+        { "x": 90, "y": "ground", "kind": "fake" },
+        { "x": 180, "y": "ground", "kind": "real" },
+        { "x": 270, "y": "ground", "kind": "real" },
+        { "x": 380, "y": "ground", "kind": "fake" },
+        { "x": 500, "y": "ground", "kind": "real" }
+      ]
+    },
+    {
+      "type": "branch",
+      "branch_x": 1570,
+      "paths": [
+        {
+          "offset_y": 0,
+          "length": 500,
+          "obstacles": [
+            { "x": 70, "y": "ground", "kind": "real" },
+            { "x": 150, "y": "ground", "kind": "real" },
+            { "x": 230, "y": "ground", "kind": "fake" },
+            { "x": 320, "y": "ground", "kind": "real" },
+            { "x": 420, "y": "ground", "kind": "real" }
+          ]
+        },
+        {
+          "offset_y": -170,
+          "length": 500,
+          "obstacles": [
+            { "x": 100, "y": "ground", "kind": "fake" },
+            { "x": 200, "y": "ground", "kind": "real" },
+            { "x": 300, "y": "ground", "kind": "real" },
+            { "x": 400, "y": "ground", "kind": "fake" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "straight",
+      "length": 700,
+      "platform_y": 360,
+      "obstacles": [
+        { "x": 100, "y": "ground", "kind": "real" },
+        { "x": 200, "y": "ground", "kind": "fake" },
+        { "x": 300, "y": "ground", "kind": "real" },
+        { "x": 420, "y": "ground", "kind": "real" },
+        { "x": 550, "y": "ground", "kind": "fake" }
+      ]
+    },
+    {
+      "type": "branch",
+      "branch_x": 2770,
+      "paths": [
+        {
+          "offset_y": 0,
+          "length": 450,
+          "obstacles": [
+            { "x": 80, "y": "ground", "kind": "real" },
+            { "x": 170, "y": "ground", "kind": "real" },
+            { "x": 260, "y": "ground", "kind": "real" },
+            { "x": 360, "y": "ground", "kind": "fake" }
+          ]
+        },
+        {
+          "offset_y": -140,
+          "length": 450,
+          "obstacles": [
+            { "x": 120, "y": "ground", "kind": "fake" },
+            { "x": 220, "y": "ground", "kind": "real" },
+            { "x": 330, "y": "ground", "kind": "real" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "straight",
+      "length": 500,
+      "platform_y": 360,
+      "obstacles": [
+        { "x": 150, "y": "ground", "kind": "real" },
+        { "x": 280, "y": "ground", "kind": "real" },
+        { "x": 400, "y": "ground", "kind": "real" }
+      ]
+    }
+  ]
+}
