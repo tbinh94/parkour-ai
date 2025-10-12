@@ -1,0 +1,72 @@
+{
+  "theme": "dungeon",
+  "sections": [
+    {
+      "type": "straight",
+      "length": 400,
+      "platform_y": 360,
+      "obstacles": [
+        {
+          "x": 159,
+          "y": "ground",
+          "kind": "real"
+        },
+        {
+          "x": 306,
+          "y": "ground",
+          "kind": "fake"
+        }
+      ]
+    },
+    {
+      "type": "branch",
+      "branch_x": 420,
+      "paths": [
+        {
+          "offset_y": 0,
+          "length": 300,
+          "obstacles": [
+            {
+              "x": 28,
+              "y": "ground",
+              "kind": "fake"
+            },
+            {
+              "x": 249,
+              "y": "ground",
+              "kind": "real"
+            }
+          ]
+        },
+        {
+          "offset_y": -120,
+          "length": 300,
+          "obstacles": [
+            {
+              "x": 52,
+              "y": "ground",
+              "kind": "real"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "straight",
+      "length": 500,
+      "platform_y": 360,
+      "obstacles": [
+        {
+          "x": 247,
+          "y": "ground",
+          "kind": "real"
+        },
+        {
+          "x": 406,
+          "y": "ground",
+          "kind": "fake"
+        }
+      ]
+    }
+  ]
+}

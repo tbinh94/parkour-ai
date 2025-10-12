@@ -1,0 +1,14 @@
+{
+  "themes": [
+    {
+      "name": "dungeon",
+      "file": "assets/tilesets/dungeon_tileset.png",
+      "tile_size": 16,
+      "mapping": {
+        "ground_left": [0, 7],
+        "ground_middle": [1, 7],
+        "ground_right": [2, 7]
+      }
+    }
+  ]
+}

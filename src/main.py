@@ -7,8 +7,37 @@ import neat
 import os
 from collections import deque
 from config import *
-from level_manager import LevelManager
-from level_editor import LevelEditor
+from assets_manager import LOADED_THEMES
+
+# -------------------------
+# Lớp Background Đa Lớp
+# -------------------------
+class MultiLayerBackground:
+    def __init__(self, layer_configs):
+        self.layers = []
+        try:
+            for config in layer_configs:
+                surface = pygame.image.load(config["file"]).convert_alpha()
+                scaled_surface = pygame.transform.scale(surface, (SCREEN_W, SCREEN_H))
+                self.layers.append({
+                    "image": scaled_surface,
+                    "speed": config["speed"],
+                    "width": scaled_surface.get_width()
+                })
+            print(f"✓ Successfully loaded {len(self.layers)} background layers.")
+        except pygame.error as e:
+            print(f"✗ Error loading background file: {e}")
+        except Exception as e:
+            print(f"✗ Unknown error loading background: {e}")
+            
+    def draw(self, screen, world_x_offset):
+        for layer in self.layers:
+            scroll = world_x_offset * layer["speed"]
+            x1 = -(scroll % layer["width"])
+            screen.blit(layer["image"], (x1, 0))
+            if x1 < 0:
+                screen.blit(layer["image"], (x1 + layer["width"], 0))
+
 # -------------------------
 # Game Entities
 # -------------------------
@@ -32,8 +61,12 @@ class Platform:
 # Level loader (JSON)
 # -------------------------
 def load_level(path):
-    with open(path, "r", encoding="utf-8") as f:
+    full_path = os.path.join('levels', path)
+    with open(full_path, "r", encoding="utf-8") as f:
         data = json.load(f)
+    
+    theme_name = data.get("theme", "dungeon").strip()
+    
     world = []
     cursor_x = 0
     for sec in data["sections"]:
@@ -62,19 +95,21 @@ def load_level(path):
                     obstacles.append(Obstacle(ox, oy, kind=ob.get("kind", "real")))
                 paths.append({"platform": p, "obstacles": obstacles})
             world.append({"type": "branch", "branch_x": branch_x, "paths": paths})
-            maxlen = max([p["platform"].length for p in paths])
+            maxlen = max([p["platform"].length for p in paths]) if paths else 0
             cursor_x = branch_x + maxlen
         else:
             raise ValueError("Unknown section type")
     total_length = cursor_x
-    return world, total_length
+    return world, total_length, theme_name
 
 # -------------------------
-# Environment (wrapper)
+# Environment (wrapper for NEAT)
 # -------------------------
+# ... (Phần code này không thay đổi, giữ nguyên như của bạn) ...
 class ParkourEnv:
     def __init__(self, level_path, render=False):
-        self.world, self.level_length = load_level(level_path)
+        # ParkourEnv không cần theme, chỉ cần cấu trúc level
+        self.world, self.level_length, _ = load_level(level_path)
         self.render = render
         if self.render:
             pygame.init()
@@ -203,43 +238,28 @@ class ParkourEnv:
     def render_screen(self):
         if not self.render:
             return
+        # Phần render cho NEAT không cần tileset, giữ nguyên để test AI
         self.screen.fill((30, 30, 40))
         pygame.draw.rect(self.screen, (50,50,50), (0, GROUND_Y, SCREEN_W, SCREEN_H - GROUND_Y))
-        
         for seg in self.world:
             if seg["type"] == "straight":
                 p = seg["platform"]
                 x_on_screen = p.x - self.world_x
-                if x_on_screen + p.length >= -200 and x_on_screen <= SCREEN_W + 200:
-                    pygame.draw.rect(self.screen, (80,80,80), (x_on_screen, p.y, p.length, 6))
-                for ob in seg["obstacles"]:
-                    ox = ob.x - self.world_x
-                    col = (200,40,40) if ob.kind == "real" else (120,120,220)
-                    pygame.draw.rect(self.screen, col, (ox, ob.y - ob.h, ob.w, ob.h))
+                pygame.draw.rect(self.screen, (80,80,80), (x_on_screen, p.y, p.length, 6))
             else:
                 for pi, pdef in enumerate(seg["paths"]):
                     p = pdef["platform"]
                     x_on_screen = p.x - self.world_x
-                    color = (100,150,100) if pi==0 else (100,100,150)
-                    if x_on_screen + p.length >= -200 and x_on_screen <= SCREEN_W + 200:
-                        pygame.draw.rect(self.screen, color, (x_on_screen, p.y, p.length, 6))
-                    for ob in pdef["obstacles"]:
-                        ox = ob.x - self.world_x
-                        col = (200,40,40) if ob.kind == "real" else (120,120,220)
-                        pygame.draw.rect(self.screen, col, (ox, ob.y - ob.h, ob.w, ob.h))
+                    pygame.draw.rect(self.screen, (100,100,150), (x_on_screen, p.y, p.length, 6))
 
         pygame.draw.rect(self.screen, (220,220,50), (self.player_x, self.player_y, PLAYER_W, PLAYER_H))
-        
-        font = pygame.font.SysFont(None, 20)
-        txt = font.render(f"WorldX {int(self.world_x)} Score {int(self.score)}", True, (200,200,200))
-        self.screen.blit(txt, (8,8))
-
         pygame.display.flip()
         self.clock.tick(FPS)
 
 # -------------------------
 # NEAT integration
 # -------------------------
+# ... (Phần code này không thay đổi, giữ nguyên như của bạn) ...
 def eval_genomes(genomes, config):
     for genome_id, genome in genomes:
         genome.fitness = 0.0
@@ -259,75 +279,46 @@ def eval_genomes(genomes, config):
         if math.isnan(genome.fitness):
             genome.fitness = -1.0
 
-def run_neat(config_file, generations=None, visualize_best=False):
-    if generations is None:
-        generations = DEFAULT_GENERATIONS
-    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                         config_file)
-    p = neat.Population(config)
-    p.add_reporter(neat.StdOutReporter(True))
-    stats = neat.StatisticsReporter()
-    p.add_reporter(stats)
-
-    winner = p.run(eval_genomes, generations)
-    print("=== Best genome ===")
-    print(winner)
-    with open("winner_genome.pkl", "wb") as f:
-        import pickle
-        pickle.dump(winner, f)
-    if visualize_best:
-        play_with_genome(winner, config)
-
-def play_with_genome(genome, config):
-    net = neat.nn.FeedForwardNetwork.create(genome, config)
-    env = ParkourEnv(DEFAULT_LEVEL, render=True)
-    obs = env.reset()
-    done = False
-    while not done:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                return
-        outputs = net.activate(obs)
-        action = int(outputs.index(max(outputs))) if len(outputs) >= 4 else 0
-        obs, reward, done, _ = env.step(action)
-        env.render_screen()
-    pygame.time.wait(1000)
-    pygame.quit()
-
 # -------------------------
-# Player Class - FIXED ANIMATION
+# Player and Game Entities
 # -------------------------
+# ... (Phần code này không thay đổi, giữ nguyên như của bạn) ...
+def collide_player_hitbox(player, obstacle):
+    return player.hitbox.colliderect(obstacle.rect)
+
+class ObstacleSprite(pygame.sprite.Sprite):
+    def __init__(self, world_x, y, kind='real'):
+        super().__init__()
+        self._layer = 1
+        self.kind = kind
+        self.world_x = world_x
+        width, height = (30, 50)
+        color = (200, 40, 40) if kind == 'real' else (120, 120, 220)
+        self.image = pygame.Surface([width, height])
+        self.image.fill(color)
+        self.rect = self.image.get_rect()
+        self.rect.bottom = y
+        
+    def update(self, world_x_offset):
+        self.rect.x = self.world_x - world_x_offset
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        
+        self._layer = 2
         self.vy = 0
         self.on_ground = True
-
         self.state = 'run'
         self.current_frame = 0
         self.last_update_time = pygame.time.get_ticks()
-
-        # Load animations từ config
         self.animations = {}
         for anim_name, anim_cfg in ANIMATION_CONFIG.items():
             self.animations[anim_name] = self.load_spritesheet(
-                anim_cfg['file'],
-                anim_cfg['frames'],
-                anim_cfg['frame_width'],
-                anim_cfg['frame_height'],
-                anim_cfg['scale'],
-                anim_cfg['speed']
+                anim_cfg['file'], anim_cfg['frames'], anim_cfg['frame_width'],
+                anim_cfg['frame_height'], anim_cfg['scale'], anim_cfg['speed']
             )
-        
         self.image = self.animations[self.state]['frames'][self.current_frame]
-        self.rect = self.image.get_rect()
-        self.rect.topleft = (x, y)
-        
-        # Tạo hitbox nhỏ hơn sprite để collision chính xác hơn
-        # Hitbox sẽ ở giữa sprite, không tính phần trong suốt
+        self.rect = self.image.get_rect(topleft=(x, y))
         self.hitbox = pygame.Rect(0, 0, PLAYER_W, PLAYER_H)
         self.update_hitbox()
 
@@ -336,24 +327,18 @@ class Player(pygame.sprite.Sprite):
         try:
             spritesheet = pygame.image.load(path).convert_alpha()
             sheet_width = spritesheet.get_width()
-            
-            # Tự động tính frame width nếu không khớp
             actual_frame_w = sheet_width // num_frames
-            
             for i in range(num_frames):
                 rect = pygame.Rect(i * actual_frame_w, 0, actual_frame_w, frame_h)
                 frame = spritesheet.subsurface(rect)
-                new_width = int(actual_frame_w * scale)
-                new_height = int(frame_h * scale)
+                new_width, new_height = int(actual_frame_w * scale), int(frame_h * scale)
                 frame = pygame.transform.scale(frame, (new_width, new_height))
                 frames.append(frame)
         except pygame.error as e:
-            print(f"Lỗi: Không thể nạp file ảnh tại '{path}': {e}")
-            # Tạo placeholder frame
+            print(f"Error loading spritesheet at '{path}': {e}")
             placeholder = pygame.Surface((int(frame_w*scale), int(frame_h*scale)), pygame.SRCALPHA)
-            placeholder.fill((255, 0, 255, 128))  # Màu magenta để dễ nhận biết
+            placeholder.fill((255, 0, 255, 128))
             frames.append(placeholder)
-
         return {'frames': frames, 'speed': anim_speed}
 
     def jump(self):
@@ -361,68 +346,32 @@ class Player(pygame.sprite.Sprite):
             self.vy = JUMP_V
             self.on_ground = False
             self.state = 'jump'
-            self.current_frame = 0  # Reset về frame đầu khi nhảy
+            self.current_frame = 0
 
     def update_hitbox(self):
-        # Căn hitbox vào giữa sprite (horizontally) và bottom (vertically)
         self.hitbox.centerx = self.rect.centerx
         self.hitbox.bottom = self.rect.bottom
 
-    def update(self):
-        # Vật lý
+    def update(self, *args, **kwargs):
         self.vy += GRAVITY
         self.rect.y += self.vy
-        
-        if self.rect.bottom >= GROUND_Y:
-            self.rect.bottom = GROUND_Y
-            self.vy = 0
-            self.on_ground = True
-
-        # Cập nhật trạng thái animation
+        if self.rect.bottom >= GROUND_Y: self.rect.bottom = GROUND_Y; self.vy = 0; self.on_ground = True
         previous_state = self.state
-        if not self.on_ground:
-            if self.vy < 0:
-                self.state = 'jump'
-            else:
-                self.state = 'fall'
-        else:
-            self.state = 'run'
-        
-        # Reset frame khi đổi trạng thái
-        if self.state != previous_state:
-            self.current_frame = 0
-
-        # Cập nhật frame
-        now = pygame.time.get_ticks()
-        current_anim = self.animations[self.state]
-        
+        if not self.on_ground: self.state = 'jump' if self.vy < 0 else 'fall'
+        else: self.state = 'run'
+        if self.state != previous_state: self.current_frame = 0
+        now = pygame.time.get_ticks(); current_anim = self.animations[self.state]
         if now - self.last_update_time > current_anim['speed']:
             self.last_update_time = now
-            
-            if self.state == 'jump':
-                # Jump animation chỉ chạy 1 lần
-                if self.current_frame < len(current_anim['frames']) - 1:
-                    self.current_frame += 1
-            else:
-                # Run và Fall lặp lại
-                self.current_frame = (self.current_frame + 1) % len(current_anim['frames'])
-            
+            if self.state == 'jump' and self.current_frame < len(current_anim['frames']) - 1: self.current_frame += 1
+            else: self.current_frame = (self.current_frame + 1) % len(current_anim['frames'])
             self.image = current_anim['frames'][self.current_frame]
-        
-        # Cập nhật hitbox theo vị trí mới
         self.update_hitbox()
 
-    def draw(self, screen):
-        screen.blit(self.image, self.rect)
-        # DEBUG: Vẽ hitbox để kiểm tra (xóa dòng này sau khi test xong)
-        pygame.draw.rect(screen, (0, 255, 0), self.hitbox, 2)
-
 # -------------------------
-# Game State Management (REFACTORED STRUCTURE)
+# Game State Management
 # -------------------------
-
 class GameState:
-    """Lớp cơ sở cho tất cả các trạng thái game."""
     def __init__(self, game):
         self.game = game
     def handle_events(self, events): pass
@@ -432,23 +381,62 @@ class GameState:
     def exit_state(self): pass
 
 class PlayingState(GameState):
-    """Trạng thái khi người chơi đang trong màn chơi."""
     def __init__(self, game, level_file):
         super().__init__(game)
         self.level_file = level_file
-        try:
-            self.world, self.level_length = load_level(self.level_file)
-        except Exception as e:
-            print(f"Error loading {level_file}: {e}. Loading default level.")
-            self.world, self.level_length = load_level(DEFAULT_LEVEL)
         
-        self.player = None
+        try:
+            self.world_data, self.level_length, theme_name = load_level(self.level_file)
+        except Exception as e:
+            print(f"❌ Error loading {self.level_file}, falling back to default: {e}")
+            self.world_data, self.level_length, theme_name = load_level(DEFAULT_LEVEL)
+        
+        self.background = MultiLayerBackground(PARALLAX_BACKGROUND_CONFIG)
+        
+        # SỬA LỖI TẠI ĐÂY: Lấy theme từ dictionary LOADED_THEMES
+        self.active_theme_tiles = LOADED_THEMES.get(theme_name)
+        if not self.active_theme_tiles:
+            print(f"⚠️ Theme '{theme_name}' not found! Falling back to the first available theme.")
+            if LOADED_THEMES:
+                self.active_theme_tiles = next(iter(LOADED_THEMES.values()))
+            else:
+                 self.active_theme_tiles = None
+        
+        self.all_sprites = pygame.sprite.LayeredUpdates()
+        self.real_obstacles = pygame.sprite.Group()
+        self.fake_obstacles = pygame.sprite.Group()
+        self.player = Player(50, GROUND_Y - 56)
         self.world_x_offset = 0
 
     def enter_state(self):
-        """Reset lại màn chơi mỗi khi bắt đầu."""
-        print(f"Entering Playing State for level: {self.level_file}")
-        self.player = Player(50, GROUND_Y - 56)
+        self.all_sprites.empty()
+        self.real_obstacles.empty()
+        self.fake_obstacles.empty()
+        
+        self.player.rect.x = 50
+        self.player.rect.bottom = GROUND_Y
+        self.player.vy = 0
+        self.player.on_ground = True
+        self.player.state = 'run'
+
+        self.all_sprites.add(self.player)
+
+        for seg in self.world_data:
+            obstacles_in_segment = []
+            if seg["type"] == "straight":
+                obstacles_in_segment = seg.get("obstacles", [])
+            elif seg["type"] == "branch":
+                for path in seg.get("paths", []):
+                    obstacles_in_segment.extend(path.get("obstacles", []))
+            
+            for ob_data in obstacles_in_segment:
+                obstacle_sprite = ObstacleSprite(ob_data.x, ob_data.y, ob_data.kind)
+                if ob_data.kind == 'real':
+                    self.real_obstacles.add(obstacle_sprite)
+                else:
+                    self.fake_obstacles.add(obstacle_sprite)
+                self.all_sprites.add(obstacle_sprite)
+        
         self.world_x_offset = 0
 
     def handle_events(self, events):
@@ -458,59 +446,88 @@ class PlayingState(GameState):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     self.player.jump()
-                if event.key == pygame.K_ESCAPE: # Thêm: Quay lại menu
+                if event.key == pygame.K_ESCAPE:
                     self.game.running = False
 
     def update(self):
         self.player.update()
         self.world_x_offset += RUN_SPEED
-
-        # Kiểm tra va chạm
-        for seg in self.world:
-            # ... (logic va chạm giữ nguyên y hệt như phiên bản trước)
-            obstacles_to_check = []
-            if seg["type"] == "straight": obstacles_to_check = seg["obstacles"]
-            else: 
-                for pdef in seg["paths"]: obstacles_to_check.extend(pdef["obstacles"])
-            
-            for ob in obstacles_to_check:
-                ox_on_screen = ob.x - self.world_x_offset
-                ob_rect_on_screen = pygame.Rect(ox_on_screen, ob.y - ob.h, ob.w, ob.h)
-                if self.player.hitbox.colliderect(ob_rect_on_screen) and ob.kind == 'real':
-                    self.game.flip_state("game_over")
-                    return
-
+        self.all_sprites.update(self.world_x_offset)
+        
+        if self.world_x_offset >= self.level_length - PLAYER_W:
+            self.game.game_status = 'COMPLETED'
+            self.game.running = False
+            return
+        
+        if pygame.sprite.spritecollide(self.player, self.real_obstacles, False, collide_player_hitbox):
+            self.game.flip_state("game_over")
+            return
+    
     def draw(self, screen):
-        # ... (logic vẽ giữ nguyên y hệt như phiên bản trước)
         screen.fill((30, 30, 40))
-        for seg in self.world:
+        if self.background:
+            self.background.draw(screen, self.world_x_offset)
+
+        # SỬA LỖI LỚN TẠI ĐÂY: Logic vẽ platform hoàn toàn mới
+        if not self.active_theme_tiles:
+            self.draw_platforms_fallback(screen)
+            self.all_sprites.draw(screen)
+            return
+
+        tile_left = self.active_theme_tiles.get('ground_left')
+        tile_middle = self.active_theme_tiles.get('ground_middle')
+        tile_right = self.active_theme_tiles.get('ground_right')
+        
+        # Lấy kích thước tile từ chính tile đã nạp để đảm bảo linh hoạt
+        tile_size = tile_middle.get_width() if tile_middle else 16
+
+        if not all([tile_left, tile_middle, tile_right]):
+             self.draw_platforms_fallback(screen)
+             self.all_sprites.draw(screen)
+             return
+
+        for seg in self.world_data:
             if seg["type"] == "straight":
                 p = seg["platform"]
                 x_on_screen = p.x - self.world_x_offset
-                pygame.draw.rect(screen, (80,80,80), (x_on_screen, p.y, p.length, 6))
-                for ob in seg["obstacles"]:
-                    ox = ob.x - self.world_x_offset
-                    ob_rect = pygame.Rect(ox, ob.y - ob.h, ob.w, ob.h)
-                    col = (200,40,40) if ob.kind == "real" else (120,120,220)
-                    pygame.draw.rect(screen, col, ob_rect)
-            else: # branch
-                for pi, pdef in enumerate(seg["paths"]):
+                num_tiles = int(p.length / tile_size)
+                for i in range(num_tiles):
+                    tile_to_draw = tile_middle
+                    if i == 0:
+                        tile_to_draw = tile_left
+                    elif i == num_tiles - 1:
+                        tile_to_draw = tile_right
+                    screen.blit(tile_to_draw, (x_on_screen + i * tile_size, p.y))
+            elif seg["type"] == "branch":
+                 for pdef in seg["paths"]:
                     p = pdef["platform"]
                     x_on_screen = p.x - self.world_x_offset
+                    num_tiles = int(p.length / tile_size)
+                    for i in range(num_tiles):
+                        tile_to_draw = tile_middle
+                        if i == 0:
+                            tile_to_draw = tile_left
+                        elif i == num_tiles - 1:
+                            tile_to_draw = tile_right
+                        screen.blit(tile_to_draw, (x_on_screen + i * tile_size, p.y))
+
+        self.all_sprites.draw(screen)
+
+    def draw_platforms_fallback(self, screen):
+        print("Warning: Drawing fallback platforms. Check themes.json or level files.")
+        for seg in self.world_data:
+            if seg["type"] == "straight":
+                p = seg["platform"]
+                pygame.draw.rect(screen, (80,80,80), (p.x - self.world_x_offset, p.y, p.length, 6))
+            else:
+                for pi, pdef in enumerate(seg["paths"]):
+                    p = pdef["platform"]
                     color = (100,150,100) if pi==0 else (100,100,150)
-                    pygame.draw.rect(screen, color, (x_on_screen, p.y, p.length, 6))
-                    for ob in pdef["obstacles"]:
-                        ox = ob.x - self.world_x_offset
-                        ob_rect = pygame.Rect(ox, ob.y - ob.h, ob.w, ob.h)
-                        col = (200,40,40) if ob.kind == "real" else (120,120,220)
-                        pygame.draw.rect(screen, col, ob_rect)
-        self.player.draw(screen)
+                    pygame.draw.rect(screen, color, (p.x - self.world_x_offset, p.y, p.length, 6))
 
 class GameOverState(GameState):
-    """Trạng thái màn hình Game Over."""
     def __init__(self, game):
         super().__init__(game)
-        # ... (logic GameOverState giữ nguyên y hệt như phiên bản trước)
         self.font_large = pygame.font.SysFont(None, 60)
         self.text_game_over = self.font_large.render("GAME OVER", True, (255, 60, 60))
         self.text_rect = self.text_game_over.get_rect(center=(SCREEN_W/2, SCREEN_H/2 - 40))
@@ -526,34 +543,17 @@ class GameOverState(GameState):
                 if event.key == pygame.K_ESCAPE: self.game.running = False
 
     def draw(self, screen):
-        # ... (logic vẽ GameOverState giữ nguyên y hệt như phiên bản trước)
         screen.fill((10, 10, 10))
         screen.blit(self.text_game_over, self.text_rect)
         screen.blit(self.instr_text, self.instr_rect)
 
 class Game:
-    """Lớp chính quản lý game và các trạng thái của nó."""
     def __init__(self, screen, level_file):
-        # pygame.init() -> XÓA DÒNG NÀY
-        self.screen = screen # Sử dụng screen được truyền vào
+        self.screen = screen
         pygame.display.set_caption(f"Parkour Game - {level_file}")
         self.clock = pygame.time.Clock()
         self.running = True
-        
-        self.states = {
-            "playing": PlayingState(self, level_file),
-            "game_over": GameOverState(self)
-        }
-        self.current_state_name = "playing"
-        self.current_state = self.states[self.current_state_name]
-        self.current_state.enter_state()
-
-        pygame.init()
-        self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
-        pygame.display.set_caption(f"Parkour Game - {level_file}")
-        self.clock = pygame.time.Clock()
-        self.running = True
-        
+        self.game_status = 'QUIT'
         self.states = {
             "playing": PlayingState(self, level_file),
             "game_over": GameOverState(self)
@@ -576,101 +576,10 @@ class Game:
             self.current_state.draw(self.screen)
             pygame.display.flip()
             self.clock.tick(FPS)
-        #pygame.quit()
-        print("Exiting game screen, returning to menu...")
+        return self.game_status
 
 # -------------------------
-# Entry point for playing manually
-# -------------------------
-def play_manually(level_file=DEFAULT_LEVEL):
-    """Khởi tạo và chạy game với một level cụ thể."""
-    pygame.init()
-    screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
-    game = Game(screen, level_file)
-    game.run()
-    pygame.quit()
-
-
-def main_app():
-    """
-    Hàm điều phối chính của ứng dụng.
-    Khởi tạo Pygame MỘT LẦN, sau đó chạy các trạng thái con (Menu, Game, Editor).
-    """
-    # --- Khởi tạo Pygame một lần duy nhất ở đây ---
-    pygame.init()
-    screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
-    
-    # Trạng thái hiện tại của ứng dụng
-    app_state = "MENU"
-    selected_level = None
-
-    while True:
-        if app_state == "MENU":
-            print("Entering Level Manager...")
-            manager = LevelManager(screen)
-            user_choice = manager.run()
-            
-            if user_choice == 'EDITOR':
-                app_state = "EDITOR"
-            elif user_choice is not None: # Player chose a level
-                app_state = "GAME"
-                selected_level = user_choice
-            else: # Player quit from menu
-                break # Thoát khỏi vòng lặp chính
-
-        elif app_state == "GAME":
-            print(f"Starting game with level: {selected_level}")
-            game = Game(screen, selected_level)
-            game.run() # Vòng lặp game sẽ chạy cho đến khi kết thúc (hoặc ESC)
-            app_state = "MENU" # Sau khi game kết thúc, quay lại menu
-
-        elif app_state == "EDITOR":
-            print("Launching Level Editor...")
-            editor = LevelEditor(screen)
-            editor.run() # Vòng lặp editor chạy cho đến khi kết thúc
-            app_state = "MENU" # Sau khi editor thoát, quay lại menu
-
-    # --- Đóng Pygame một lần duy nhất khi ứng dụng thực sự kết thúc ---
-    print("Exiting application.")
-    pygame.quit()
-    sys.exit()
-# -------------------------
-# Entry point for NEAT training (không thay đổi)
+# Entry point
 # -------------------------
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--train", action="store_true", help="Train NEAT")
-    parser.add_argument("--play", action="store_true", help="Play the game manually")
-    parser.add_argument("--gen", type=int, default=DEFAULT_GENERATIONS, help="Generations for training")
-    parser.add_argument("--render", action="store_true", help="Render the best genome after training")
-    args = parser.parse_args()
-
-    if args.play:
-        main_app()
-    elif args.train:
-        local_dir = os.path.dirname(__file__)
-        config_path = os.path.join(local_dir, "config-neat.txt")
-        run_neat(config_path, generations=args.gen, visualize_best=args.render)
-    else:
-        print("This file is for training AI.")
-        print("To play the game, run 'python run_game.py'")
-
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--train", action="store_true", help="Train NEAT")
-    parser.add_argument("--play", action="store_true", help="Play the game manually")
-    parser.add_argument("--gen", type=int, default=DEFAULT_GENERATIONS, help="Generations for training")
-    parser.add_argument("--render", action="store_true", help="Render the best genome after training")
-    args = parser.parse_args()
-
-    if args.play:
-        play_manually()
-    elif args.train:
-        local_dir = os.path.dirname(__file__)
-        config_path = os.path.join(local_dir, "config-neat.txt")
-        run_neat(config_path, generations=args.gen, visualize_best=args.render)
-    else:
-        print("Vui lòng chọn một chế độ:")
-        print("  python main.py --play    (Để tự chơi game)")
-        print("  python main.py --train   (Để huấn luyện AI)")
+    print("This file is a module. Run 'game.py' to play.")

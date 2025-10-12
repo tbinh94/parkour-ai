@@ -1,12 +1,7 @@
-"""
-Utility functions for Parkour Game
-- Random level generator
-- Level validator
-- Difficulty analyzer
-"""
-
 import json
 import random
+import pygame
+
 from config import *
 
 def generate_random_level(difficulty=2, sections=5, seed=None):
@@ -383,3 +378,57 @@ if __name__ == "__main__":
     else:
         print(f"Unknown command: {command}")
         sys.exit(1)
+
+
+def slice_spritesheet(filepath, tile_width, tile_height):
+    """
+    Cắt một spritesheet thành các tile riêng biệt.
+    
+    Args:
+        filepath: Đường dẫn đến file spritesheet
+        tile_width: Chiều rộng của mỗi tile
+        tile_height: Chiều cao của mỗi tile
+    
+    Returns:
+        List of pygame.Surface objects (các tile đã cắt)
+    """
+    try:
+        # Load spritesheet
+        spritesheet = pygame.image.load(filepath).convert_alpha()
+        sheet_width = spritesheet.get_width()
+        sheet_height = spritesheet.get_height()
+        
+        print(f"  📐 Spritesheet size: {sheet_width}x{sheet_height}")
+        print(f"  ✂️  Tile size: {tile_width}x{tile_height}")
+        
+        # Calculate số lượng tiles
+        cols = sheet_width // tile_width
+        rows = sheet_height // tile_height
+        total_tiles = cols * rows
+        
+        print(f"  🔢 Grid: {cols} cols × {rows} rows = {total_tiles} tiles")
+        
+        tiles = []
+        
+        # Cắt từ trái sang phải, từ trên xuống dưới
+        for row in range(rows):
+            for col in range(cols):
+                x = col * tile_width
+                y = row * tile_height
+                
+                # Tạo rect cho tile
+                rect = pygame.Rect(x, y, tile_width, tile_height)
+                
+                # Cắt tile từ spritesheet
+                tile = spritesheet.subsurface(rect).copy()
+                tiles.append(tile)
+        
+        print(f"  ✓ Extracted {len(tiles)} tiles")
+        return tiles
+        
+    except pygame.error as e:
+        print(f"  ❌ Error loading spritesheet '{filepath}': {e}")
+        return []
+    except Exception as e:
+        print(f"  ❌ Unexpected error: {e}")
+        return []

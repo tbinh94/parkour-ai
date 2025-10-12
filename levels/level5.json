@@ -1,0 +1,102 @@
+{
+  "theme": "dungeon",
+  "sections": [
+    {
+      "type": "straight",
+      "length": 450,
+      "platform_y": 360,
+      "obstacles": [
+        { "x": 90, "y": "ground", "kind": "fake" },
+        { "x": 180, "y": "ground", "kind": "real" },
+        { "x": 270, "y": "ground", "kind": "fake" },
+        { "x": 360, "y": "ground", "kind": "real" }
+      ]
+    },
+    {
+      "type": "branch",
+      "branch_x": 470,
+      "paths": [
+        {
+          "offset_y": 0,
+          "length": 480,
+          "obstacles": [
+            { "x": 70, "y": "ground", "kind": "real" },
+            { "x": 150, "y": "ground", "kind": "fake" },
+            { "x": 230, "y": "ground", "kind": "real" },
+            { "x": 310, "y": "ground", "kind": "fake" },
+            { "x": 400, "y": "ground", "kind": "real" }
+          ]
+        },
+        {
+          "offset_y": -160,
+          "length": 480,
+          "obstacles": [
+            { "x": 100, "y": "ground", "kind": "real" },
+            { "x": 220, "y": "ground", "kind": "real" },
+            { "x": 350, "y": "ground", "kind": "real" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "straight",
+      "comment": "Hành Lang Ảo Ảnh",
+      "length": 800,
+      "platform_y": 360,
+      "obstacles": [
+        { "x": 80, "y": "ground", "kind": "fake" },
+        { "x": 160, "y": "ground", "kind": "fake" },
+        { "x": 240, "y": "ground", "kind": "fake" },
+        { "x": 350, "y": "ground", "kind": "real" },
+        { "x": 450, "y": "ground", "kind": "fake" },
+        { "x": 550, "y": "ground", "kind": "fake" },
+        { "x": 650, "y": "ground", "kind": "fake" }
+      ]
+    },
+    {
+      "type": "branch",
+      "comment": "Cây Cầu Gãy Vụn",
+      "branch_x": 1770,
+      "paths": [
+        {
+          "offset_y": 0,
+          "length": 830,
+          "obstacles": [
+            { "x": 90, "y": "ground", "kind": "real" },
+            { "x": 240, "y": "ground", "kind": "fake" },
+            { "x": 390, "y": "ground", "kind": "real" },
+            { "x": 540, "y": "ground", "kind": "real" },
+            { "x": 700, "y": "ground", "kind": "fake" }
+          ]
+        },
+        {
+          "offset_y": -150,
+          "length": 830,
+          "obstacles": [
+            { "x": 120, "y": "ground", "kind": "real" },
+            { "x": 280, "y": "ground", "kind": "fake" },
+            { "x": 440, "y": "ground", "kind": "real" },
+            { "x": 600, "y": "ground", "kind": "real" },
+            { "x": 750, "y": "ground", "kind": "real" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "straight",
+      "comment": "Cổng Thánh Địa",
+      "length": 900,
+      "platform_y": 360,
+      "obstacles": [
+        { "x": 100, "y": "ground", "kind": "real" },
+        { "x": 180, "y": "ground", "kind": "real" },
+        { "x": 300, "y": "ground", "kind": "fake" },
+        { "x": 420, "y": "ground", "kind": "real" },
+        { "x": 500, "y": "ground", "kind": "real" },
+        { "x": 620, "y": "ground", "kind": "fake" },
+        { "x": 750, "y": "ground", "kind": "real" },
+        { "x": 830, "y": "ground", "kind": "real" }
+      ]
+    }
+  ]
+}
