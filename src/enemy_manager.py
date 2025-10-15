@@ -203,18 +203,27 @@ def get_enemy_data(enemy_name):
 # 🔥 CONFIG TÙY CHỈNH (OPTIONAL)
 # Chỉ cần thêm vào đây nếu muốn override giá trị tự động
 ENEMY_CONFIGS = {
-    # Ví dụ: Nếu auto-detect không chính xác cho 'worm'
-    # 'worm': {
-    #     'scale': 0.6,
-    #     'animation_speed': 140,
-    #     'y_offset': -20,  # Override auto_y_offset
-    #     'use_static_frame': False
-    # },
-    
-    # Hoặc nếu muốn wizard đứng yên
-    # 'wizard': {
-    #     'use_static_frame': True
-    # }
+    # Điều chỉnh animation speed để mượt hơn
+    'skeleton': {
+        'animation_speed': 100,  # Nhanh hơn = mượt hơn
+        'scale': 1.2
+    },
+    'wizard': {
+        'animation_speed': 80,
+        'use_static_frame': False  # Cho phép animate
+    },
+    'goblin': {
+        'animation_speed': 120,
+        'scale': 1.0
+    },
+    'mushroom': {
+        'animation_speed': 150,
+        'scale': 0.8
+    },
+    'worm': {
+        'animation_speed': 100,
+        'scale': 0.6
+    }
 }
 
 def get_enemy_config(enemy_name):

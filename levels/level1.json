@@ -1,78 +1,117 @@
 {
-  "theme": "dungeon",
+  "theme": "forgotten_catacombs",
   "sections": [
     {
       "type": "straight",
-      "length": 400,
+      "length": 350,
       "platform_y": 360,
       "obstacles": [
-        {
-          "x": 159,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 306,
-          "y": "ground",
-          "kind": "fake"
-        }
+        { "x": 120, "y": "ground", "kind": "fake" },
+        { "x": 240, "y": "ground", "kind": "real" },
+        { "x": 330, "y": "ground", "kind": "fake" }
+      ]
+    },
+    {
+      "type": "elevation",
+      "direction": "up",
+      "slope_length": 200,
+      "start_y": 360,
+      "end_y": 280,
+      "obstacles": [
+        { "x": 80, "y": "slope", "kind": "real" },
+        { "x": 150, "y": "slope", "kind": "fake" }
+      ]
+    },
+    {
+      "type": "straight",
+      "length": 250,
+      "platform_y": 280,
+      "obstacles": [
+        { "x": 50, "y": "ground", "kind": "real" },
+        { "x": 200, "y": "ground", "kind": "fake" }
       ]
     },
     {
       "type": "branch",
-      "branch_x": 420,
+      "branch_x": 260,
       "paths": [
         {
           "offset_y": 0,
-          "length": 300,
+          "length": 320,
+          "label": "Safe Path",
           "obstacles": [
-            {
-              "x": 28,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 249,
-              "y": "ground",
-              "kind": "real"
-            }
+            { "x": 70, "y": "ground", "kind": "fake" },
+            { "x": 200, "y": "ground", "kind": "real" }
           ]
         },
         {
-          "offset_y": -120,
-          "length": 300,
+          "offset_y": -150,
+          "length": 380,
+          "label": "Risky Path",
           "obstacles": [
-            {
-              "x": 52,
-              "y": "ground",
-              "kind": "real"
-            }
-          ]
+            { "x": 40, "y": "ground", "kind": "real" },
+            { "x": 150, "y": "ground", "kind": "real" },
+            { "x": 290, "y": "ground", "kind": "fake" }
+          ],
+          "reward": { "type": "collectible", "position": { "x": 310, "y": 200 } }
         }
       ]
     },
     {
-      "type": "straight",
-      "length": 500,
-      "platform_y": 360,
+      "type": "drop",
+      "drop_x": 600,
+      "height": 200,
+      "landing_y": 420,
       "obstacles": [
-        {
-          "x": 247,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 406,
-          "y": "ground",
-          "kind": "fake"
-        }
+        { "x": 20, "y": "midair", "kind": "fake" }
       ]
+    },
+    {
+      "type": "straight",
+      "length": 450,
+      "platform_y": 420,
+      "obstacles": [
+        { "x": 100, "y": "ground", "kind": "real" },
+        { "x": 190, "y": "ground", "kind": "fake" },
+        { "x": 320, "y": "ground", "kind": "real" },
+        { "x": 390, "y": "ground", "kind": "fake" }
+      ]
+    },
+    {
+      "type": "elevation",
+      "direction": "up",
+      "slope_length": 200,
+      "start_y": 420,
+      "end_y": 320,
+      "obstacles": [
+        { "x": 100, "y": "slope", "kind": "fake" }
+      ]
+    },
+    {
+      "type": "straight",
+      "length": 280,
+      "platform_y": 320,
+      "obstacles": [
+        { "x": 80, "y": "ground", "kind": "real" },
+        { "x": 220, "y": "ground", "kind": "fake" }
+      ]
+    },
+    {
+      "type": "arena",
+      "center_x": 150,
+      "width": 300,
+      "platform_y": 320,
+      "obstacles": [
+        { "x": 50, "y": "ground", "kind": "real" },
+        { "x": 250, "y": "ground", "kind": "real" }
+      ],
+      "note": "Possible miniboss / fast obstacle sequence"
     }
   ],
   "metadata": {
-    "display_name": "2. 🌙 The Dark Path",
+    "display_name": "2. 🌫 Echoes of the Forsaken",
     "order": 2,
-    "difficulty": "Easy",
-    "description": "Your first real challenge in the darkness"
+    "difficulty": "Medium",
+    "description": "A gloomy descent into forgotten tombs. Only those who dare will find the hidden path."
   }
 }

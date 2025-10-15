@@ -55,11 +55,20 @@ class MultiLayerBackground:
         except Exception as e:
             print(f"✗ Unknown error loading background: {e}")
             
-    def draw(self, screen, world_x_offset):
+    def draw(self, screen, world_x_offset, level_length):
+        """
+        Vẽ các lớp background với hiệu ứng parallax.
+        ✅ Fix 1: Background dừng lại khi hết level.
+        """
         for layer in self.layers:
-            scroll = world_x_offset * layer["speed"]
-            x1 = -(scroll % layer["width"])
+            # Tính toán điểm scroll tối đa để background dừng lại ở cuối level
+            max_scroll = max(0, level_length - SCREEN_W)
+            # Giới hạn scroll thực tế của layer theo max_scroll
+            actual_scroll = min(world_x_offset * layer["speed"], max_scroll * layer["speed"])
+            
+            x1 = -(actual_scroll % layer["width"])
             screen.blit(layer["image"], (x1, 0))
+            # Vẽ thêm một bản sao để tạo hiệu ứng lặp liền mạch
             if x1 < 0:
                 screen.blit(layer["image"], (x1 + layer["width"], 0))
 
@@ -316,7 +325,7 @@ class ObstacleSprite(pygame.sprite.Sprite):
         
         self.enemy_type = enemy_type
         self.current_frame = 0
-        self.last_update = pygame.time.get_ticks()
+        self.anim_timer = 0.0 # ✅ Fix 2: Timer cho animation dựa trên delta_time
         self.frames = None
         self.scaled_frames = []
         self.is_animated = True
@@ -340,7 +349,6 @@ class ObstacleSprite(pygame.sprite.Sprite):
             # Cập nhật vị trí y của điểm neo với offset
             self.world_pos.y += y_offset
             # Chỉnh lại world_pos.x để nó là tâm dưới thay vì cạnh trái
-            # Giả định chiều rộng obstacle là 30
             self.world_pos.x += 15 
 
             for frame in self.frames:
@@ -363,12 +371,16 @@ class ObstacleSprite(pygame.sprite.Sprite):
             # Căn chỉnh vị trí logic cho hình chữ nhật
             self.world_pos.x += width / 2
             
-    def update(self, world_x_offset):
+    def update(self, world_x_offset, delta_time):
+        """
+        Cập nhật sprite.
+        ✅ Fix 2: Sử dụng delta_time cho animation mượt mà.
+        """
         # CẬP NHẬT ANIMATION TRƯỚC
         if self.scaled_frames and self.is_animated:
-            now = pygame.time.get_ticks()
-            if now - self.last_update > self.animation_speed:
-                self.last_update = now
+            self.anim_timer += delta_time * 1000 # Cộng dồn mili giây
+            if self.anim_timer > self.animation_speed:
+                self.anim_timer -= self.animation_speed # Giữ lại phần dư để chính xác hơn
                 self.current_frame = (self.current_frame + 1) % len(self.scaled_frames)
                 self.image = self.scaled_frames[self.current_frame]
         
@@ -380,7 +392,6 @@ class ObstacleSprite(pygame.sprite.Sprite):
         screen_x = self.world_pos.x - world_x_offset
         
         # Đặt vị trí hiển thị bằng cách gán vị trí neo (midbottom)
-        # 🔥 SỬA LỖI TẠI ĐÂY: Dùng midbottom thay vì bottomcenter
         self.rect.midbottom = (screen_x, self.world_pos.y)
 
 class Player(pygame.sprite.Sprite):
@@ -391,7 +402,7 @@ class Player(pygame.sprite.Sprite):
         self.on_ground = True
         self.state = 'run'
         self.current_frame = 0
-        self.last_update_time = pygame.time.get_ticks()
+        self.anim_timer = 0.0 # ✅ Fix 2: Timer cho animation dựa trên delta_time
         self.animations = {}
         for anim_name, anim_cfg in ANIMATION_CONFIG.items():
             self.animations[anim_name] = self.load_spritesheet(
@@ -433,7 +444,13 @@ class Player(pygame.sprite.Sprite):
         self.hitbox.centerx = self.rect.centerx
         self.hitbox.bottom = self.rect.bottom
 
-    def update(self, *args, **kwargs):
+    def update(self, world_x_offset, delta_time):
+        """
+        Cập nhật Player.
+        ✅ Fix 2: Sử dụng delta_time cho animation mượt mà.
+        Tham số world_x_offset được nhận từ group.update() nhưng không dùng đến.
+        """
+        # --- Physics (vẫn dựa trên frame để giữ nguyên gameplay cho NEAT) ---
         self.vy += GRAVITY
         self.rect.y += self.vy
         if self.rect.bottom >= GROUND_Y: 
@@ -441,6 +458,7 @@ class Player(pygame.sprite.Sprite):
             self.vy = 0
             self.on_ground = True
         
+        # --- State Management ---
         previous_state = self.state
         if not self.on_ground: 
             self.state = 'jump' if self.vy < 0 else 'fall'
@@ -450,15 +468,19 @@ class Player(pygame.sprite.Sprite):
         if self.state != previous_state: 
             self.current_frame = 0
         
-        now = pygame.time.get_ticks()
+        # --- Animation (dựa trên delta_time) ---
         current_anim = self.animations[self.state]
-        if now - self.last_update_time > current_anim['speed']:
-            self.last_update_time = now
+        self.anim_timer += delta_time * 1000 # Cộng dồn mili giây
+        if self.anim_timer > current_anim['speed']:
+            self.anim_timer -= current_anim['speed'] # Giữ lại phần dư
             if self.state == 'jump' and self.current_frame < len(current_anim['frames']) - 1: 
+                # Đảm bảo animation jump chạy hết 1 lần rồi dừng ở frame cuối
                 self.current_frame += 1
             else: 
+                # Các animation khác lặp lại
                 self.current_frame = (self.current_frame + 1) % len(current_anim['frames'])
             self.image = current_anim['frames'][self.current_frame]
+            
         self.update_hitbox()
 
 # -------------------------
@@ -468,7 +490,7 @@ class GameState:
     def __init__(self, game):
         self.game = game
     def handle_events(self, events): pass
-    def update(self): pass
+    def update(self, delta_time): pass
     def draw(self, screen): pass
     def enter_state(self): pass
     def exit_state(self): pass
@@ -587,10 +609,11 @@ class PlayingState(GameState):
                 if event.key == pygame.K_ESCAPE:
                     self.game.running = False
 
-    def update(self):
-        self.player.update()
+    def update(self, delta_time):
         self.world_x_offset += RUN_SPEED
-        self.all_sprites.update(self.world_x_offset)
+        # Cập nhật tất cả các sprite trong group, truyền cả offset và delta_time
+        # Player cũng nằm trong group này và sẽ được cập nhật một lần duy nhất
+        self.all_sprites.update(self.world_x_offset, delta_time)
         
         if self.world_x_offset >= self.level_length - PLAYER_W:
             self.game.game_status = 'COMPLETED'
@@ -604,7 +627,8 @@ class PlayingState(GameState):
     def draw(self, screen):
         screen.fill((30, 30, 40))
         if self.background:
-            self.background.draw(screen, self.world_x_offset)
+            # ✅ Fix 1: Truyền level_length để background dừng lại đúng lúc
+            self.background.draw(screen, self.world_x_offset, self.level_length)
 
         # SỬA LỖI LỚN TẠI ĐÂY: Logic vẽ platform hoàn toàn mới
         if not self.active_theme_tiles:
@@ -731,13 +755,30 @@ class Game:
         self.current_state.enter_state()
 
     def run(self):
+        """
+        Vòng lặp game chính.
+        ✅ Fix 2: Tính toán delta_time ở đây và truyền nó xuống.
+        """
+        last_time = pygame.time.get_ticks()
         while self.running:
+            # Tính toán delta_time (thời gian giữa các frame, tính bằng giây)
+            current_time = pygame.time.get_ticks()
+            delta_time = (current_time - last_time) / 1000.0
+            last_time = current_time
+            
+            # Xử lý các sự kiện
             events = pygame.event.get()
             self.current_state.handle_events(events)
-            self.current_state.update()
+            
+            # Cập nhật trạng thái game với delta_time
+            self.current_state.update(delta_time)
+            
+            # Vẽ lên màn hình
             self.current_state.draw(self.screen)
+            
             pygame.display.flip()
             self.clock.tick(FPS)
+            
         return self.game_status
 
 # -------------------------
