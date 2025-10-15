@@ -63,17 +63,21 @@ def load_assets():
                         all_tiles.append(spritesheet.subsurface(rect))
 
             cols = sheet_width // tile_size
-            
+            print(f"     - Tileset dimensions: {sheet_width}x{sheet_height} pixels")
+            print(f"     - Expected tiles to map: {list(mapping.keys())}")
+
             for tile_name, pos in mapping.items():
                 col, row = pos
                 if col < cols:
                     tile_index = row * cols + col
+                    print(f"     - Mapping '{tile_name}' [{col}, {row}] → index {tile_index}", end="")
                     if tile_index < len(all_tiles):
                         LOADED_THEMES[theme_name][tile_name] = all_tiles[tile_index]
+                        print(" ✓ OK")
                     else:
-                        print(f"     - Warning: Tile '{tile_name}' at {pos} is out of bounds.")
+                        print(f" ❌ OUT OF BOUNDS! (max index: {len(all_tiles)-1})")
                 else:
-                    print(f"     - Warning: Tile '{tile_name}' at {pos} is out of bounds.")
+                    print(f" ❌ Column {col} >= {cols}")
 
         except pygame.error as e:
             print(f"     - ❌ Error loading spritesheet for theme '{theme_name}': {e}")

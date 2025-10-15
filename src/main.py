@@ -7,7 +7,32 @@ import neat
 import os
 from collections import deque
 from config import *
-from assets_manager import LOADED_THEMES
+from assets_manager import LOADED_THEMES, load_assets
+from enemy_manager import LOADED_ENEMIES, load_enemies, get_random_enemy, get_enemy_data, get_enemy_config
+
+# ❌ KHÔNG gọi load_assets() ở đây vì pygame chưa init!
+# load_assets() sẽ được gọi trong game.py sau khi pygame.init()
+
+# -------------------------
+# Initialization Helper
+# -------------------------
+def initialize_pygame_and_assets():
+    """Khởi tạo pygame trước, sau đó mới load assets"""
+    if not pygame.get_init():
+        pygame.init()
+        print("✓ Pygame initialized")
+    
+    # Chỉ load assets một lần duy nhất
+    if not LOADED_THEMES:
+        load_assets()
+    else:
+        print("ℹ️ Assets already loaded, skipping...")
+    
+    # Load enemies
+    if not LOADED_ENEMIES:
+        load_enemies()
+    else:
+        print("ℹ️ Enemies already loaded, skipping...")
 
 # -------------------------
 # Lớp Background Đa Lớp
@@ -105,14 +130,13 @@ def load_level(path):
 # -------------------------
 # Environment (wrapper for NEAT)
 # -------------------------
-# ... (Phần code này không thay đổi, giữ nguyên như của bạn) ...
 class ParkourEnv:
     def __init__(self, level_path, render=False):
         # ParkourEnv không cần theme, chỉ cần cấu trúc level
         self.world, self.level_length, _ = load_level(level_path)
         self.render = render
         if self.render:
-            pygame.init()
+            initialize_pygame_and_assets()  # ✅ Init pygame trước khi dùng
             self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
             pygame.display.set_caption("Parkour NEAT")
             self.clock = pygame.time.Clock()
@@ -259,7 +283,6 @@ class ParkourEnv:
 # -------------------------
 # NEAT integration
 # -------------------------
-# ... (Phần code này không thay đổi, giữ nguyên như của bạn) ...
 def eval_genomes(genomes, config):
     for genome_id, genome in genomes:
         genome.fitness = 0.0
@@ -282,25 +305,83 @@ def eval_genomes(genomes, config):
 # -------------------------
 # Player and Game Entities
 # -------------------------
-# ... (Phần code này không thay đổi, giữ nguyên như của bạn) ...
 def collide_player_hitbox(player, obstacle):
     return player.hitbox.colliderect(obstacle.rect)
 
 class ObstacleSprite(pygame.sprite.Sprite):
-    def __init__(self, world_x, y, kind='real'):
+    def __init__(self, world_x, y, kind='real', enemy_type=None):
         super().__init__()
         self._layer = 1
         self.kind = kind
-        self.world_x = world_x
-        width, height = (30, 50)
-        color = (200, 40, 40) if kind == 'real' else (120, 120, 220)
-        self.image = pygame.Surface([width, height])
-        self.image.fill(color)
-        self.rect = self.image.get_rect()
-        self.rect.bottom = y
         
+        self.enemy_type = enemy_type
+        self.current_frame = 0
+        self.last_update = pygame.time.get_ticks()
+        self.frames = None
+        self.scaled_frames = []
+        self.is_animated = True
+
+        # self.world_pos lưu vị trí của điểm NEO (midbottom) trong thế giới
+        self.world_pos = pygame.math.Vector2(world_x, y)
+
+        if enemy_type and enemy_type in LOADED_ENEMIES:
+            enemy_data = get_enemy_data(enemy_type)
+            enemy_config = get_enemy_config(enemy_type)
+            
+            self.frames = enemy_data['frames']
+            self.animation_speed = enemy_config['animation_speed']
+            self.scale = enemy_config['scale']
+            y_offset = enemy_config['y_offset']
+            use_static_frame = enemy_config['use_static_frame']
+
+            if use_static_frame:
+                self.is_animated = False
+
+            # Cập nhật vị trí y của điểm neo với offset
+            self.world_pos.y += y_offset
+            # Chỉnh lại world_pos.x để nó là tâm dưới thay vì cạnh trái
+            # Giả định chiều rộng obstacle là 30
+            self.world_pos.x += 15 
+
+            for frame in self.frames:
+                original_w, original_h = frame.get_size()
+                new_w = int(original_w * self.scale)
+                new_h = int(original_h * self.scale)
+                scaled = pygame.transform.scale(frame, (new_w, new_h))
+                self.scaled_frames.append(scaled)
+            
+            self.image = self.scaled_frames[0]
+            self.rect = self.image.get_rect()
+            
+        else:
+            # Fallback hình chữ nhật
+            width, height = (30, 50)
+            color = (200, 40, 40) if kind == 'real' else (120, 120, 220)
+            self.image = pygame.Surface([width, height])
+            self.image.fill(color)
+            self.rect = self.image.get_rect()
+            # Căn chỉnh vị trí logic cho hình chữ nhật
+            self.world_pos.x += width / 2
+            
     def update(self, world_x_offset):
-        self.rect.x = self.world_x - world_x_offset
+        # CẬP NHẬT ANIMATION TRƯỚC
+        if self.scaled_frames and self.is_animated:
+            now = pygame.time.get_ticks()
+            if now - self.last_update > self.animation_speed:
+                self.last_update = now
+                self.current_frame = (self.current_frame + 1) % len(self.scaled_frames)
+                self.image = self.scaled_frames[self.current_frame]
+        
+        # LUÔN LUÔN TÍNH TOÁN LẠI VỊ TRÍ HIỂN THỊ DỰA TRÊN VỊ TRÍ LOGIC
+        # Lấy rect mới của ảnh hiện tại để có kích thước đúng
+        self.rect = self.image.get_rect()
+        
+        # Tính toán vị trí x trên màn hình
+        screen_x = self.world_pos.x - world_x_offset
+        
+        # Đặt vị trí hiển thị bằng cách gán vị trí neo (midbottom)
+        # 🔥 SỬA LỖI TẠI ĐÂY: Dùng midbottom thay vì bottomcenter
+        self.rect.midbottom = (screen_x, self.world_pos.y)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -355,16 +436,28 @@ class Player(pygame.sprite.Sprite):
     def update(self, *args, **kwargs):
         self.vy += GRAVITY
         self.rect.y += self.vy
-        if self.rect.bottom >= GROUND_Y: self.rect.bottom = GROUND_Y; self.vy = 0; self.on_ground = True
+        if self.rect.bottom >= GROUND_Y: 
+            self.rect.bottom = GROUND_Y
+            self.vy = 0
+            self.on_ground = True
+        
         previous_state = self.state
-        if not self.on_ground: self.state = 'jump' if self.vy < 0 else 'fall'
-        else: self.state = 'run'
-        if self.state != previous_state: self.current_frame = 0
-        now = pygame.time.get_ticks(); current_anim = self.animations[self.state]
+        if not self.on_ground: 
+            self.state = 'jump' if self.vy < 0 else 'fall'
+        else: 
+            self.state = 'run'
+        
+        if self.state != previous_state: 
+            self.current_frame = 0
+        
+        now = pygame.time.get_ticks()
+        current_anim = self.animations[self.state]
         if now - self.last_update_time > current_anim['speed']:
             self.last_update_time = now
-            if self.state == 'jump' and self.current_frame < len(current_anim['frames']) - 1: self.current_frame += 1
-            else: self.current_frame = (self.current_frame + 1) % len(current_anim['frames'])
+            if self.state == 'jump' and self.current_frame < len(current_anim['frames']) - 1: 
+                self.current_frame += 1
+            else: 
+                self.current_frame = (self.current_frame + 1) % len(current_anim['frames'])
             self.image = current_anim['frames'][self.current_frame]
         self.update_hitbox()
 
@@ -393,14 +486,23 @@ class PlayingState(GameState):
         
         self.background = MultiLayerBackground(PARALLAX_BACKGROUND_CONFIG)
         
+        # DEBUG: Kiểm tra theme có load không
+        print(f"🎨 Level requires theme: '{theme_name}'")
+        print(f"🗂️ Available themes in LOADED_THEMES: {list(LOADED_THEMES.keys())}")
+        
         # SỬA LỖI TẠI ĐÂY: Lấy theme từ dictionary LOADED_THEMES
         self.active_theme_tiles = LOADED_THEMES.get(theme_name)
         if not self.active_theme_tiles:
             print(f"⚠️ Theme '{theme_name}' not found! Falling back to the first available theme.")
             if LOADED_THEMES:
                 self.active_theme_tiles = next(iter(LOADED_THEMES.values()))
+                print(f"✓ Using fallback theme with tiles: {list(self.active_theme_tiles.keys())}")
             else:
-                 self.active_theme_tiles = None
+                print("❌ CRITICAL: No themes loaded at all!")
+                self.active_theme_tiles = None
+        else:
+            print(f"✓ Theme '{theme_name}' loaded successfully!")
+            print(f"  Available tiles: {list(self.active_theme_tiles.keys())}")
         
         self.all_sprites = pygame.sprite.LayeredUpdates()
         self.real_obstacles = pygame.sprite.Group()
@@ -421,6 +523,19 @@ class PlayingState(GameState):
 
         self.all_sprites.add(self.player)
 
+        # 🔥 TẠO OBSTACLES VỚI RANDOM ENEMIES
+        print("\n" + "="*60)
+        print("🎮 CREATING OBSTACLES WITH ENEMIES")
+        print("="*60)
+        print(f"📋 Available enemies in LOADED_ENEMIES: {list(LOADED_ENEMIES.keys())}")
+        print(f"📊 Number of enemies loaded: {len(LOADED_ENEMIES)}")
+        
+        if not LOADED_ENEMIES:
+            print("⚠️ WARNING: No enemies loaded! Obstacles will use fallback rectangles.")
+        
+        obstacle_count = 0
+        enemy_count = 0
+        
         for seg in self.world_data:
             obstacles_in_segment = []
             if seg["type"] == "straight":
@@ -430,12 +545,35 @@ class PlayingState(GameState):
                     obstacles_in_segment.extend(path.get("obstacles", []))
             
             for ob_data in obstacles_in_segment:
-                obstacle_sprite = ObstacleSprite(ob_data.x, ob_data.y, ob_data.kind)
+                obstacle_count += 1
+                
+                # Random enemy nếu là real obstacle và có enemies available
+                enemy_type = None
+                if ob_data.kind == 'real' and LOADED_ENEMIES:
+                    enemy_type = get_random_enemy()
+                    enemy_count += 1
+                    print(f"\n  Obstacle #{obstacle_count}:")
+                    print(f"    Position: x={ob_data.x}, y={ob_data.y}")
+                    print(f"    Kind: {ob_data.kind}")
+                    print(f"    🎲 Selected enemy: {enemy_type}")
+                
+                obstacle_sprite = ObstacleSprite(
+                    ob_data.x, 
+                    ob_data.y, 
+                    ob_data.kind,
+                    enemy_type=enemy_type  # 🔥 Pass enemy type
+                )
+                
                 if ob_data.kind == 'real':
                     self.real_obstacles.add(obstacle_sprite)
                 else:
                     self.fake_obstacles.add(obstacle_sprite)
                 self.all_sprites.add(obstacle_sprite)
+        
+        print("\n" + "-"*60)
+        print(f"✓ Created {obstacle_count} obstacles total")
+        print(f"✓ Applied enemies to {enemy_count} real obstacles")
+        print("="*60 + "\n")
         
         self.world_x_offset = 0
 
@@ -470,6 +608,7 @@ class PlayingState(GameState):
 
         # SỬA LỖI LỚN TẠI ĐÂY: Logic vẽ platform hoàn toàn mới
         if not self.active_theme_tiles:
+            print("⚠️ WARNING: No tiles available, using fallback rendering")
             self.draw_platforms_fallback(screen)
             self.all_sprites.draw(screen)
             return
@@ -478,43 +617,62 @@ class PlayingState(GameState):
         tile_middle = self.active_theme_tiles.get('ground_middle')
         tile_right = self.active_theme_tiles.get('ground_right')
         
-        # Lấy kích thước tile từ chính tile đã nạp để đảm bảo linh hoạt
-        tile_size = tile_middle.get_width() if tile_middle else 16
-
+        # DEBUG: Kiểm tra tile có tồn tại không
         if not all([tile_left, tile_middle, tile_right]):
-             self.draw_platforms_fallback(screen)
-             self.all_sprites.draw(screen)
-             return
+            print("⚠️ WARNING: Missing ground tiles (left/middle/right)")
+            print(f"  tile_left: {tile_left is not None}")
+            print(f"  tile_middle: {tile_middle is not None}")
+            print(f"  tile_right: {tile_right is not None}")
+            self.draw_platforms_fallback(screen)
+            self.all_sprites.draw(screen)
+            return
+
+        # Lấy kích thước tile từ tile đã load
+        tile_size = tile_middle.get_width() if tile_middle else 16
 
         for seg in self.world_data:
             if seg["type"] == "straight":
                 p = seg["platform"]
                 x_on_screen = p.x - self.world_x_offset
-                num_tiles = int(p.length / tile_size)
+                
+                # Chỉ vẽ nếu platform nằm trong màn hình
+                if x_on_screen + p.length < 0 or x_on_screen > SCREEN_W:
+                    continue
+                
+                num_tiles = max(3, int(p.length / tile_size))  # Tối thiểu 3 tiles
                 for i in range(num_tiles):
                     tile_to_draw = tile_middle
                     if i == 0:
                         tile_to_draw = tile_left
                     elif i == num_tiles - 1:
                         tile_to_draw = tile_right
-                    screen.blit(tile_to_draw, (x_on_screen + i * tile_size, p.y))
+                    
+                    tile_x = x_on_screen + i * tile_size
+                    screen.blit(tile_to_draw, (tile_x, p.y))
+                    
             elif seg["type"] == "branch":
-                 for pdef in seg["paths"]:
+                for pdef in seg["paths"]:
                     p = pdef["platform"]
                     x_on_screen = p.x - self.world_x_offset
-                    num_tiles = int(p.length / tile_size)
+                    
+                    if x_on_screen + p.length < 0 or x_on_screen > SCREEN_W:
+                        continue
+                    
+                    num_tiles = max(3, int(p.length / tile_size))
                     for i in range(num_tiles):
                         tile_to_draw = tile_middle
                         if i == 0:
                             tile_to_draw = tile_left
                         elif i == num_tiles - 1:
                             tile_to_draw = tile_right
-                        screen.blit(tile_to_draw, (x_on_screen + i * tile_size, p.y))
+                        
+                        tile_x = x_on_screen + i * tile_size
+                        screen.blit(tile_to_draw, (tile_x, p.y))
 
         self.all_sprites.draw(screen)
 
     def draw_platforms_fallback(self, screen):
-        print("Warning: Drawing fallback platforms. Check themes.json or level files.")
+        print("⚠️ Warning: Drawing fallback platforms. Check themes.json or level files.")
         for seg in self.world_data:
             if seg["type"] == "straight":
                 p = seg["platform"]
@@ -537,10 +695,13 @@ class GameOverState(GameState):
 
     def handle_events(self, events):
         for event in events:
-            if event.type == pygame.QUIT: self.game.running = False
+            if event.type == pygame.QUIT: 
+                self.game.running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN: self.game.flip_state("playing")
-                if event.key == pygame.K_ESCAPE: self.game.running = False
+                if event.key == pygame.K_RETURN: 
+                    self.game.flip_state("playing")
+                if event.key == pygame.K_ESCAPE: 
+                    self.game.running = False
 
     def draw(self, screen):
         screen.fill((10, 10, 10))
@@ -549,6 +710,7 @@ class GameOverState(GameState):
 
 class Game:
     def __init__(self, screen, level_file):
+        initialize_pygame_and_assets()  # ✅ Đảm bảo pygame và assets đã sẵn sàng
         self.screen = screen
         pygame.display.set_caption(f"Parkour Game - {level_file}")
         self.clock = pygame.time.Clock()

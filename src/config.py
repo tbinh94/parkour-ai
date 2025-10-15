@@ -1,64 +1,60 @@
-# config.py - Background Configuration
+# config.py - Game Configuration
 
 # Screen settings
 SCREEN_W = 1024
 SCREEN_H = 768
 FPS = 60
 
-# Player settings
-PLAYER_W = 22       # Giảm từ 25 -> 22 để người chơi lách dễ hơn
-PLAYER_H = 36       # Giảm từ 40 -> 36 để dễ nhảy qua vật cản
-JUMP_V = -20.5      # Tăng từ -18 -> -20.5 để nhảy cao hơn đáng kể
-GRAVITY = 0.9       # Giữ nguyên để cảm giác rơi không thay đổi
-RUN_SPEED = 3
+# Player settings - BALANCED PHYSICS (Based on analysis)
+PLAYER_W = 22       
+PLAYER_H = 36       
+
+# Physics được điều chỉnh dựa trên physics_test.py analysis
+JUMP_V = -13      # Giảm từ -13.5 xuống -12 để nhảy thấp hơn (96px max height)
+                    # Vẫn đủ để vượt obstacle 50px với 10px clearance
+                    
+GRAVITY = 0.5      # Giữ nguyên - rơi mượt mà, realistic
+                    
+RUN_SPEED = 3.5     # Giữ nguyên - tốc độ vừa phải
+                    # Total air time: 32 frames (~0.53s)
+                    # Jump distance: 112px
 
 # Game settings
 GROUND_Y = 360
 MAX_STEPS_PER_GENOME = 2000
 DEFAULT_GENERATIONS = 40
-DEFAULT_LEVEL = "level1.json"
+DEFAULT_LEVEL = "level_tutorial.json"  # Đổi default sang tutorial
 
 
 # --- TILESET SETTINGS ---
-# Tile rendering options
-
-# Tile rendering options
 TILE_SIZE = 16
-TILE_SCALE = 1 # Thử giảm xuống 1.5 hoặc 2 xem sao
+TILE_SCALE = 1
 
 # Các preset vị trí tiles trong dungeon_tileset.png
 TILE_PRESETS = {
-    'grass_top': [(0, 7), (1, 7), (2, 7)],      # Platform có cỏ trên (đẹp hơn!)
-    'solid_middle': [(0, 8), (1, 8), (2, 8)],   # Đất/tường giữa
-    'bottom_platform': [(0, 19), (1, 19), (2, 19)], # Platform bottom
-    'dark_ground': [(0, 9), (1, 9), (2, 9)],    # Ground tối màu
-    'stone_platform': [(3, 7), (4, 7), (5, 7)], # Nền đá (nếu có)
+    'grass_top': [(0, 7), (1, 7), (2, 7)],      
+    'solid_middle': [(0, 8), (1, 8), (2, 8)],   
+    'bottom_platform': [(0, 19), (1, 19), (2, 19)],
+    'dark_ground': [(0, 9), (1, 9), (2, 9)],    
+    'stone_platform': [(3, 7), (4, 7), (5, 7)],
 }
 
-# Chọn preset muốn dùng - THỬ 'grass_top' xem có đẹp hơn không
-ACTIVE_TILE_PRESET = 'bottom_platform'  # Đổi sang grass_top để thử!
+ACTIVE_TILE_PRESET = 'bottom_platform'
 
 # ---------------------------------------------
 # CẤU HÌNH BACKGROUND PARALLAX ĐA LỚP
 # ---------------------------------------------
-# Cấu hình này sẽ được áp dụng cho tất cả các màn chơi.
-# Mỗi mục là một lớp của background.
-# - "file": Đường dẫn đến file ảnh của lớp.
-# - "speed": Tốc độ di chuyển (parallax).
-#   + speed nhỏ hơn -> lớp ở xa hơn và di chuyển chậm hơn.
-#   + speed lớn hơn -> lớp ở gần hơn và di chuyển nhanh hơn.
-# Thứ tự trong danh sách này là thứ tự vẽ, từ lớp xa nhất đến gần nhất.
 PARALLAX_BACKGROUND_CONFIG = [
     {
-        "file": "assets/backgrounds/background_layer_1.png", # Lớp xa nhất (nền sương mù)
+        "file": "assets/backgrounds/background_layer_1.png",
         "speed": 0.2
     },
     {
-        "file": "assets/backgrounds/background_layer_2.png", # Lớp giữa (cây tím)
+        "file": "assets/backgrounds/background_layer_2.png",
         "speed": 0.5
     },
     {
-        "file": "assets/backgrounds/background_layer_3.png", # Lớp gần nhất (cây cam)
+        "file": "assets/backgrounds/background_layer_3.png",
         "speed": 0.8
     }
 ]

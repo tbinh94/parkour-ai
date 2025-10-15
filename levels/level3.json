@@ -7,9 +7,21 @@
       "length": 550,
       "platform_y": 360,
       "obstacles": [
-        { "x": 150, "y": "ground", "kind": "real" },
-        { "x": 290, "y": "ground", "kind": "fake" },
-        { "x": 430, "y": "ground", "kind": "real" }
+        {
+          "x": 150,
+          "y": "ground",
+          "kind": "real"
+        },
+        {
+          "x": 290,
+          "y": "ground",
+          "kind": "fake"
+        },
+        {
+          "x": 430,
+          "y": "ground",
+          "kind": "real"
+        }
       ]
     },
     {
@@ -22,9 +34,21 @@
           "comment": "Đường dưới: Thử thách nhịp điệu với cặp real-real đầu tiên",
           "length": 500,
           "obstacles": [
-            { "x": 120, "y": "ground", "kind": "real" },
-            { "x": 260, "y": "ground", "kind": "real" },
-            { "x": 410, "y": "ground", "kind": "fake" }
+            {
+              "x": 120,
+              "y": "ground",
+              "kind": "real"
+            },
+            {
+              "x": 260,
+              "y": "ground",
+              "kind": "real"
+            },
+            {
+              "x": 410,
+              "y": "ground",
+              "kind": "fake"
+            }
           ]
         },
         {
@@ -32,8 +56,16 @@
           "comment": "Đường trên: An toàn hơn nhưng yêu cầu nhảy chính xác",
           "length": 500,
           "obstacles": [
-            { "x": 180, "y": "ground", "kind": "fake" },
-            { "x": 350, "y": "ground", "kind": "real" }
+            {
+              "x": 180,
+              "y": "ground",
+              "kind": "fake"
+            },
+            {
+              "x": 350,
+              "y": "ground",
+              "kind": "real"
+            }
           ]
         }
       ]
@@ -44,11 +76,31 @@
       "length": 650,
       "platform_y": 360,
       "obstacles": [
-        { "x": 100, "y": "ground", "kind": "fake" },
-        { "x": 220, "y": "ground", "kind": "real" },
-        { "x": 350, "y": "ground", "kind": "real" },
-        { "x": 500, "y": "ground", "kind": "fake" },
-        { "x": 620, "y": "ground", "kind": "real" }
+        {
+          "x": 100,
+          "y": "ground",
+          "kind": "fake"
+        },
+        {
+          "x": 220,
+          "y": "ground",
+          "kind": "real"
+        },
+        {
+          "x": 350,
+          "y": "ground",
+          "kind": "real"
+        },
+        {
+          "x": 500,
+          "y": "ground",
+          "kind": "fake"
+        },
+        {
+          "x": 620,
+          "y": "ground",
+          "kind": "real"
+        }
       ]
     },
     {
@@ -61,9 +113,21 @@
           "comment": "Đường dưới: Thử thách cuối cùng với chuỗi 3 real",
           "length": 500,
           "obstacles": [
-            { "x": 120, "y": "ground", "kind": "real" },
-            { "x": 210, "y": "ground", "kind": "real" },
-            { "x": 330, "y": "ground", "kind": "real" }
+            {
+              "x": 120,
+              "y": "ground",
+              "kind": "real"
+            },
+            {
+              "x": 210,
+              "y": "ground",
+              "kind": "real"
+            },
+            {
+              "x": 330,
+              "y": "ground",
+              "kind": "real"
+            }
           ]
         },
         {
@@ -71,9 +135,21 @@
           "comment": "Đường trên: Ít vật cản hơn nhưng có bẫy tâm lý",
           "length": 500,
           "obstacles": [
-            { "x": 150, "y": "ground", "kind": "real" },
-            { "x": 290, "y": "ground", "kind": "fake" },
-            { "x": 430, "y": "ground", "kind": "real" }
+            {
+              "x": 150,
+              "y": "ground",
+              "kind": "real"
+            },
+            {
+              "x": 290,
+              "y": "ground",
+              "kind": "fake"
+            },
+            {
+              "x": 430,
+              "y": "ground",
+              "kind": "real"
+            }
           ]
         }
       ]
@@ -84,9 +160,23 @@
       "length": 400,
       "platform_y": 360,
       "obstacles": [
-        { "x": 130, "y": "ground", "kind": "real" },
-        { "x": 280, "y": "ground", "kind": "fake" }
+        {
+          "x": 130,
+          "y": "ground",
+          "kind": "real"
+        },
+        {
+          "x": 280,
+          "y": "ground",
+          "kind": "fake"
+        }
       ]
     }
-  ]
+  ],
+  "metadata": {
+    "display_name": "4. 🏰 Crimson Keep",
+    "order": 4,
+    "difficulty": "Medium",
+    "description": "Master the rhythm of danger in the keep"
+  }
 }

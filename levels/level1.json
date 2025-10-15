@@ -68,5 +68,11 @@
         }
       ]
     }
-  ]
+  ],
+  "metadata": {
+    "display_name": "2. 🌙 The Dark Path",
+    "order": 2,
+    "difficulty": "Easy",
+    "description": "Your first real challenge in the darkness"
+  }
 }

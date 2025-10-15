@@ -5,9 +5,9 @@
       "file": "assets/tilesets/dungeon_tileset.png",
       "tile_size": 16,
       "mapping": {
-        "ground_left": [0, 7],
-        "ground_middle": [1, 7],
-        "ground_right": [2, 7]
+        "ground_left": [0, 19],
+        "ground_middle": [1, 19],
+        "ground_right": [2, 19]
       }
     }
   ]

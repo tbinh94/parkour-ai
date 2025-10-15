@@ -1,4 +1,10 @@
 {
+  "metadata": {
+    "display_name": "1. 🎓 Tutorial",
+    "order": 1,
+    "difficulty": "Tutorial",
+    "description": "Learn the basics: jumping and avoiding obstacles"
+  },
   "theme": "dungeon",
   "sections": [
     {
