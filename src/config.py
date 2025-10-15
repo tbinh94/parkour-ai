@@ -1,8 +1,7 @@
-# config.py - Game Configuration
 
 # Screen settings
 SCREEN_W = 1024
-SCREEN_H = 768
+SCREEN_H = 700
 FPS = 60
 
 # Player settings - BALANCED PHYSICS (Based on analysis)
