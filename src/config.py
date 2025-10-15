@@ -19,6 +19,12 @@ RUN_SPEED = 3.5     # Giữ nguyên - tốc độ vừa phải
                     # Total air time: 32 frames (~0.53s)
                     # Jump distance: 112px
 
+# Cấu hình tăng tốc cho Endless Mode
+SPEED_INCREASE_RATE = 0.2  # Tốc độ sẽ tăng thêm bao nhiêu mỗi giây
+MAX_RUN_SPEED = 15         # Tốc độ tối đa có thể đạt được
+SAFE_ZONE_DISTANCE = 50
+
+
 # Game settings
 GROUND_Y = 360
 MAX_STEPS_PER_GENOME = 2000

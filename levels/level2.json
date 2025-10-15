@@ -1,156 +1,73 @@
 {
-  "theme": "dungeon",
+  "theme": "haunted_bridge",
   "sections": [
     {
       "type": "straight",
-      "length": 500,
+      "length": 450,
       "platform_y": 360,
       "obstacles": [
-        {
-          "x": 150,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 250,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 380,
-          "y": "ground",
-          "kind": "real"
-        }
+        { "x": 120, "y": "ground", "kind": "enemy" },
+        { "x": 240, "y": "ground", "kind": "illusion" },
+        { "x": 360, "y": "ground", "kind": "enemy" }
+      ]
+    },
+    {
+      "type": "collapse",
+      "length": 500,
+      "platform_y": 360,
+      "collapse_speed": "medium",
+      "note": "Bridge planks fall behind the player",
+      "obstacles": [
+        { "x": 200, "y": "ground", "kind": "illusion" },
+        { "x": 350, "y": "ground", "kind": "enemy" }
       ]
     },
     {
       "type": "branch",
-      "branch_x": 520,
+      "branch_x": 550,
       "paths": [
         {
           "offset_y": 0,
-          "length": 400,
+          "length": 380,
+          "label": "Safe Walkway",
           "obstacles": [
-            {
-              "x": 80,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 180,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 280,
-              "y": "ground",
-              "kind": "real"
-            }
+            { "x": 80, "y": "ground", "kind": "enemy" },
+            { "x": 220, "y": "ground", "kind": "illusion" }
           ]
         },
         {
           "offset_y": -140,
-          "length": 400,
+          "length": 420,
+          "label": "Broken Railings",
           "obstacles": [
-            {
-              "x": 120,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 250,
-              "y": "ground",
-              "kind": "real"
-            }
-          ]
+            { "x": 40, "y": "ground", "kind": "illusion" },
+            { "x": 200, "y": "ground", "kind": "enemy" },
+            { "x": 300, "y": "midair", "kind": "illusion" }
+          ],
+          "reward": { "type": "collectible", "position": { "x": 350, "y": 160 } }
         }
       ]
     },
     {
-      "type": "straight",
+      "type": "chase",
       "length": 600,
       "platform_y": 360,
+      "hazard_scroll": "ghost_wall",
+      "speed": "fast",
+      "note": "Player must keep moving forward or be consumed",
       "obstacles": [
-        {
-          "x": 100,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 220,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 340,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 480,
-          "y": "ground",
-          "kind": "real"
-        }
-      ]
-    },
-    {
-      "type": "branch",
-      "branch_x": 1520,
-      "paths": [
-        {
-          "offset_y": 0,
-          "length": 350,
-          "obstacles": [
-            {
-              "x": 60,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 140,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 220,
-              "y": "ground",
-              "kind": "fake"
-            }
-          ]
-        },
-        {
-          "offset_y": -120,
-          "length": 350,
-          "obstacles": [
-            {
-              "x": 100,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 200,
-              "y": "ground",
-              "kind": "real"
-            }
-          ]
-        }
+        { "x": 150, "y": "ground", "kind": "illusion" },
+        { "x": 320, "y": "ground", "kind": "enemy" },
+        { "x": 480, "y": "ground", "kind": "illusion" }
       ]
     },
     {
       "type": "straight",
-      "length": 400,
+      "length": 350,
       "platform_y": 360,
+      "note": "Calm before exit",
       "obstacles": [
-        {
-          "x": 150,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 300,
-          "y": "ground",
-          "kind": "real"
-        }
+        { "x": 200, "y": "ground", "kind": "enemy" }
       ]
     }
   ],
@@ -158,6 +75,6 @@
     "display_name": "3. 👻 Haunted Bridge",
     "order": 3,
     "difficulty": "Medium",
-    "description": "Navigate the treacherous haunted bridge"
+    "description": "A crumbling bridge haunted by ghosts. Keep moving, or be taken."
   }
 }

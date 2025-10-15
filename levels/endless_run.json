@@ -1,0 +1,66 @@
+{
+  "mode": "endless",
+  "theme": "abyss_ruins",
+
+  "initial_speed": 5,
+  "speed_scale_over_time": 0.03,
+  "metadata": {
+    "display_name": "∞ Endless Abyss",
+    "description": "Run forever. Speed increases gradually. Only death decides your fate.",
+    "difficulty": "Scaling",
+    "badge": "🔥 Survival Mode",
+    "is_always_visible": true
+  },
+  "patterns": [
+    {
+      "id": "flat_basic",
+      "type": "straight",
+      "length": 400,
+      "platform_y": 360,
+      "obstacles": [
+        { "x": 140, "y": "ground", "kind": "enemy" },
+        { "x": 280, "y": "ground", "kind": "illusion" }
+      ]
+    },
+    {
+      "id": "gap_jump",
+      "type": "gap",
+      "gap_length": 180,
+      "platform_y": 360
+    },
+    {
+      "id": "elevation_rise",
+      "type": "elevation",
+      "direction": "up",
+      "slope_length": 250,
+      "start_y": 360,
+      "end_y": 300,
+      "obstacles": [
+        { "x": 120, "y": "slope", "kind": "illusion" }
+      ]
+    },
+    {
+      "id": "split_path",
+      "type": "branch",
+      "paths": [
+        {
+          "offset_y": 0,
+          "length": 320,
+          "label": "Safe"
+        },
+        {
+          "offset_y": -120,
+          "length": 320,
+          "label": "Risky",
+          "reward": { "type": "collectible", "position": { "x": 250, "y": 200 } }
+        }
+      ]
+    }
+  ],
+
+  "spawn_logic": {
+    "order": "random",  
+    "allow_repeats": true,
+    "avoid_consecutive_same": true
+  }
+}
