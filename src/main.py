@@ -1,4 +1,4 @@
-# main.py
+
 import pygame
 import sys
 import json
@@ -122,11 +122,14 @@ class WallState:
     
     def start_slide(self, side):
         """Bắt đầu trượt tường"""
-        if not self.is_sliding:
+        # Chỉ bắt đầu trượt nếu chưa trượt hoặc trượt ở phía đối diện
+        if not self.is_sliding or self.side != side:
             self.is_sliding = True
             self.side = side
             self.time_elapsed = 0.0
-            self.can_jump = True
+            # Cho phép nhảy ngay khi bắt đầu trượt
+            if self.jump_cooldown <= 0:
+                self.can_jump = True
     
     def stop_slide(self):
         """Dừng trượt tường"""
@@ -147,8 +150,12 @@ class WallState:
         if self.is_sliding:
             self.time_elapsed += delta_time
         
+        # --- SỬA LỖI LOGIC Ở ĐÂY ---
         if self.jump_cooldown > 0:
             self.jump_cooldown -= delta_time
+        # Nếu cooldown đã hết và người chơi chưa thể nhảy, hãy cho phép họ nhảy lại.
+        elif not self.can_jump:
+            self.can_jump = True
 
 # -------------------------
 # Terrain Type Handlers
@@ -441,14 +448,10 @@ class Player(pygame.sprite.Sprite):
             self.vy = JUMP_V
             self.on_ground = False
         elif self.wall_state.is_sliding and self.wall_state.execute_jump():
-            # Áp dụng lực nhảy lên và ra khỏi tường
-            jump_vy = -abs(JUMP_V) * 0.85  # Nhảy tường không cao bằng nhảy thường
-            jump_vx = 300 if self.wall_state.side == 'left' else -300 # Đẩy ra khỏi tường
-            
+            jump_vy = -abs(JUMP_V) * 0.85
+            jump_vx = 300 if self.wall_state.side == 'left' else -300
             self.vy = jump_vy
             self.vx = jump_vx
-            
-            # Ngay lập tức dừng trạng thái trượt tường
             self.wall_state.stop_slide()
             print(f"🚀 WALL JUMP from {self.wall_state.side} wall!")
 
@@ -488,7 +491,7 @@ class Player(pygame.sprite.Sprite):
         
         return (None, None, 0)
 
-    def update(self, platforms, world_x_offset, delta_time, wall_tiles=None):
+    def update(self, platforms, world_x_offset, delta_time, wall_tiles=None, current_run_speed=RUN_SPEED): # Thêm current_run_speed
         old_hitbox = self.hitbox.copy()
         
         self.wall_state.update(delta_time)
@@ -501,29 +504,27 @@ class Player(pygame.sprite.Sprite):
         self.update_hitbox()
         
         # === WALL COLLISION (Horizontal) ===
-        # FIX 2: Rewritten wall collision logic for robustness.
         if wall_tiles:
             side, wall_rect, overlap = self._check_wall_collision(self.hitbox, wall_tiles, world_x_offset)
             
             if side:
-                # 'side' is the side of the PLAYER that is colliding.
                 if side == 'right' and self.vx >= 0:
-                    # Player is moving (or is stationary) into a wall on their right.
-                    self.hitbox.right = wall_rect.left  # Snap hitbox to the wall's edge.
-                    self.rect.centerx = self.hitbox.centerx # Sync visual rect.
+                    self.hitbox.right = wall_rect.left
+                    self.rect.centerx = self.hitbox.centerx
+                    # --- SỬA LOGIC Ở ĐÂY ---
+                    # Triệt tiêu vận tốc ngang để người chơi "dính" vào tường
                     self.vx = 0
-                    self.wall_state.start_slide('right') # Start slide on the right-hand wall.
+                    self.wall_state.start_slide('right')
                 elif side == 'left' and self.vx <= 0:
-                    # Player is moving (or is stationary) into a wall on their left.
-                    self.hitbox.left = wall_rect.right # Snap hitbox to the wall's edge.
-                    self.rect.centerx = self.hitbox.centerx # Sync visual rect.
+                    self.hitbox.left = wall_rect.right
+                    self.rect.centerx = self.hitbox.centerx
+                    # --- SỬA LOGIC Ở ĐÂY ---
+                    # Triệt tiêu vận tốc ngang để người chơi "dính" vào tường
                     self.vx = 0
-                    self.wall_state.start_slide('left') # Start slide on the left-hand wall.
+                    self.wall_state.start_slide('left')
                 else:
-                    # Player is touching a wall but moving away from it.
                     self.wall_state.stop_slide()
             else:
-                # No wall collision detected.
                 self.wall_state.stop_slide()
             
             self.update_hitbox()
@@ -531,7 +532,6 @@ class Player(pygame.sprite.Sprite):
         # === VERTICAL MOVEMENT ===
         self.vy += GRAVITY
         
-        # If sliding on a wall, reduce fall speed.
         if self.wall_state.is_sliding and not self.on_ground:
             self.vy = min(self.vy, MAX_WALL_SLIDE_SPEED)
         
@@ -714,7 +714,7 @@ class PlayingState(GameState):
                 self.current_run_speed += SPEED_INCREASE_RATE * delta_time
             self.current_run_speed = min(self.current_run_speed, MAX_RUN_SPEED)
 
-        self.world_x_offset += self.current_run_speed
+        self.world_x_offset += self.current_run_speed * delta_time * 60
 
         # Clear physics lists for the current frame
         self.visible_platforms.clear()
@@ -763,7 +763,8 @@ class PlayingState(GameState):
             self.visible_platforms, 
             self.world_x_offset, 
             delta_time, 
-            wall_tiles=self.visible_wall_tiles
+            wall_tiles=self.visible_wall_tiles,
+            current_run_speed=self.current_run_speed # <-- TRUYỀN VÀO ĐÂY
         )
         
         if wall_check == "WALL_TIME_EXCEEDED":

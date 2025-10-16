@@ -10,7 +10,7 @@ JUMP_V = -13      # độ cao nhảy, càng nhỏ càng cao
                     
 GRAVITY = 0.5      # độ rơi 
                     
-RUN_SPEED = 3
+RUN_SPEED = 3.5
 
 # Cấu hình tăng tốc cho Endless Mode
 SPEED_INCREASE_RATE = 0.2  # Tốc độ sẽ tăng thêm bao nhiêu mỗi giây
@@ -23,10 +23,11 @@ WALL_CLIMB_WARNING_TIME = 1.5        # Thời điểm bắt đầu cảnh báo (
 WALL_PUSH_BACK_SPEED = 150           # Tốc độ đẩy lùi tường
 CONSECUTIVE_WALL_JUMP_COOLDOWN = 0.1 # Cooldown giữa các lần nhảy liên tiếp
 PLAYER_DRAG_COEFFICIENT = 0.85      # Lực cản khi di chuyển ngang
-MAX_WALL_SLIDE_SPEED = 150          # Tốc độ tối đa khi trượt tường
+MAX_WALL_SLIDE_SPEED = 2.5        # Tốc độ tối đa khi trượt tường
+WALL_COUNTER_SCROLL_SPEED = RUN_SPEED
 
-PLAYER_TARGET_X = 150  # Vị trí X lý tưởng của player trên màn hình (tính từ trái)
-CAMERA_CATCH_UP_SPEED_MULTIPLIER = 2.0  # Camera sẽ bắt kịp player nhanh đến mức nào
+PLAYER_TARGET_X = 250  # Vị trí X lý tưởng của player trên màn hình (tính từ trái)
+CAMERA_CATCH_UP_SPEED_MULTIPLIER = 1.0  # Camera sẽ bắt kịp player nhanh đến mức nào
 
 # Game settings
 GROUND_Y = 360
