@@ -1,4 +1,3 @@
-
 import pygame
 import sys
 import json
@@ -7,10 +6,16 @@ import math
 import neat
 import os
 from collections import deque
-from config import *
+# Giáº£ sá»­ PLAYER_TARGET_X cÃ³ trong config, náº¿u khÃ´ng sáº½ dÃ¹ng giÃ¡ trá»‹ máº·c Ä‘á»‹nh
+from config import * 
 from assets_manager import LOADED_THEMES, load_assets
 from enemy_manager import LOADED_ENEMIES, load_enemies, get_random_enemy, get_enemy_data, get_enemy_config
 from decoy_manager import LOADED_DECOYS, load_decoys, get_random_decoy, get_decoy_data, get_decoy_config
+
+# Thiáº¿t láº­p giÃ¡ trá»‹ máº·c Ä‘á»‹nh náº¿u chÆ°a cÃ³ trong config
+if 'PLAYER_TARGET_X' not in globals():
+    PLAYER_TARGET_X = SCREEN_W // 3
+    print(f"â„¹ï¸ PLAYER_TARGET_X not found in config, defaulting to {PLAYER_TARGET_X}")
 
 # -------------------------
 # Initialization Helper
@@ -18,16 +23,16 @@ from decoy_manager import LOADED_DECOYS, load_decoys, get_random_decoy, get_deco
 def initialize_pygame_and_assets():
     if not pygame.get_init():
         pygame.init()
-        print("✓ Pygame initialized")
+        print("âœ“ Pygame initialized")
     
     if not LOADED_THEMES: load_assets()
-    else: print("ℹ️ Assets already loaded, skipping...")
+    else: print("â„¹ï¸ Assets already loaded, skipping...")
     
     if not LOADED_ENEMIES: load_enemies()
-    else: print("ℹ️ Enemies already loaded, skipping...")
+    else: print("â„¹ï¸ Enemies already loaded, skipping...")
     
     if not LOADED_DECOYS: load_decoys()
-    else: print("ℹ️ Decoys already loaded, skipping...")
+    else: print("â„¹ï¸ Decoys already loaded, skipping...")
 
 # -------------------------
 # Multi-Layer Background
@@ -44,11 +49,11 @@ class MultiLayerBackground:
                     "speed": config["speed"],
                     "width": scaled_surface.get_width()
                 })
-            print(f"✓ Successfully loaded {len(self.layers)} background layers.")
+            print(f"âœ“ Successfully loaded {len(self.layers)} background layers.")
         except pygame.error as e:
-            print(f"✗ Error loading background file: {e}")
+            print(f"âœ— Error loading background file: {e}")
         except Exception as e:
-            print(f"✗ Unknown error loading background: {e}")
+            print(f"âœ— Unknown error loading background: {e}")
             
     def draw(self, screen, world_x_offset, level_length):
         for layer in self.layers:
@@ -103,7 +108,7 @@ class WallTile:
 # WALL STATE SYSTEM
 # -------------------------
 class WallState:
-    """Quản lý trạng thái tương tác với tường"""
+    """Quáº£n lÃ½ tráº¡ng thÃ¡i tÆ°Æ¡ng tÃ¡c vá»›i tÆ°á»ng"""
     
     def __init__(self):
         self.is_sliding = False
@@ -111,52 +116,53 @@ class WallState:
         self.time_elapsed = 0.0
         self.can_jump = True
         self.jump_cooldown = 0.0
-    
+        self.re_attach_cooldown = 0.0  # <<< THÃŠM DÃ’NG NÃ€Y
+
     def reset(self):
-        """Reset trạng thái tường"""
+        """Reset tráº¡ng thÃ¡i tÆ°á»ng"""
         self.is_sliding = False
         self.side = None
         self.time_elapsed = 0.0
         self.can_jump = True
         self.jump_cooldown = 0.0
+        self.re_attach_cooldown = 0.0  # <<< THÃŠM DÃ’NG NÃ€Y
     
     def start_slide(self, side):
-        """Bắt đầu trượt tường"""
-        # Chỉ bắt đầu trượt nếu chưa trượt hoặc trượt ở phía đối diện
-        if not self.is_sliding or self.side != side:
+        """Báº¯t Ä‘áº§u trÆ°á»£t tÆ°á»ng"""
+        if (not self.is_sliding or self.side != side) and self.re_attach_cooldown <= 0: # <<< THÃŠM ÄIá»€U KIá»†N
             self.is_sliding = True
             self.side = side
             self.time_elapsed = 0.0
-            # Cho phép nhảy ngay khi bắt đầu trượt
             if self.jump_cooldown <= 0:
                 self.can_jump = True
     
     def stop_slide(self):
-        """Dừng trượt tường"""
+        """Dá»«ng trÆ°á»£t tÆ°á»ng"""
         self.is_sliding = False
         self.side = None
         self.time_elapsed = 0.0
     
     def execute_jump(self):
-        """Thực hiện wall jump"""
+        """Thá»±c hiá»‡n wall jump"""
         if self.can_jump and self.is_sliding:
             self.can_jump = False
             self.jump_cooldown = CONSECUTIVE_WALL_JUMP_COOLDOWN
+            self.re_attach_cooldown = 0.2  # Báº­t cooldown 0.2 giÃ¢y <<< THÃŠM DÃ’NG NÃ€Y
             return True
         return False
     
     def update(self, delta_time):
-        """Cập nhật trạng thái mỗi frame"""
+        """Cáº­p nháº­t tráº¡ng thÃ¡i má»—i frame"""
         if self.is_sliding:
             self.time_elapsed += delta_time
         
-        # --- SỬA LỖI LOGIC Ở ĐÂY ---
         if self.jump_cooldown > 0:
             self.jump_cooldown -= delta_time
-        # Nếu cooldown đã hết và người chơi chưa thể nhảy, hãy cho phép họ nhảy lại.
         elif not self.can_jump:
             self.can_jump = True
-
+            
+        if self.re_attach_cooldown > 0:  # <<< THÃŠM KHá»I Lá»†NH NÃ€Y
+            self.re_attach_cooldown -= delta_time
 # -------------------------
 # Terrain Type Handlers
 # -------------------------
@@ -300,7 +306,7 @@ class EndlessManager:
         self.patterns = patterns_data
         self.spawn_logic = spawn_logic
         self.last_pattern_id = None
-        print(f"✓ EndlessManager initialized with {len(self.patterns)} patterns.")
+        print(f"âœ“ EndlessManager initialized with {len(self.patterns)} patterns.")
         if not self.patterns:
             raise ValueError("Endless mode requires at least one pattern.")
     def get_next_pattern(self):
@@ -329,7 +335,7 @@ def load_level(path):
         return {"patterns": patterns, "spawn_logic": spawn_logic, "theme": theme_name, "is_endless": True}
     else:
         world = []
-        print(f"💡 Injecting a {SAFE_ZONE_DISTANCE}px safe zone at the start of the level.")
+        print(f"ðŸ’¡ Injecting a {SAFE_ZONE_DISTANCE}px safe zone at the start of the level.")
         safe_zone_config = {"type": "straight", "platform_y": GROUND_Y, "length": SAFE_ZONE_DISTANCE, "obstacles": []}
         safe_segment = TerrainGenerator.straight(0, safe_zone_config)
         world.append(safe_segment)
@@ -443,17 +449,34 @@ class Player(pygame.sprite.Sprite):
             frames.append(placeholder)
         return {'frames': frames, 'speed': anim_speed}
 
+    # DÃ¡n Ä‘oáº¡n code nÃ y Ä‘á»ƒ thay tháº¿ cho hÃ m jump() cÅ© trong class Player
     def jump(self):
         if self.on_ground:
             self.vy = JUMP_V
             self.on_ground = False
         elif self.wall_state.is_sliding and self.wall_state.execute_jump():
-            jump_vy = -abs(JUMP_V) * 0.85
-            jump_vx = 300 if self.wall_state.side == 'left' else -300
+            # --- Sá»¬A Lá»–I LOG ---
+            # Láº¥y thÃ´ng tin phÃ­a tÆ°á»ng (side) TRÆ¯á»šC KHI reset tráº¡ng thÃ¡i.
+            # Äiá»u nÃ y sáº½ Ä‘áº£m báº£o log hiá»ƒn thá»‹ 'left' hoáº·c 'right' thay vÃ¬ 'None'.
+            wall_side = self.wall_state.side
+            print(f"ðŸš€ WALL CLIMB JUMP from {wall_side} wall!")
+
+            # --- TÃNH TOÃN Láº I Lá»°C NHáº¢Y ---
+            # Giá»¯ nguyÃªn lá»±c nháº£y lÃªn (vy) Ä‘á»ƒ Ä‘áº£m báº£o Ä‘á»™ cao.
+            # Báº¡n cÃ³ thá»ƒ giáº£m má»™t chÃºt (vÃ­ dá»¥ * 0.95) Ä‘á»ƒ cáº£m giÃ¡c bÃ¡m tÆ°á»ng "náº·ng" hÆ¡n.
+            jump_vy = -abs(JUMP_V)
+
+            # Äáº·t lá»±c Ä‘áº©y ngang (vx) vá» 0.
+            # ÄÃ¢y lÃ  thay Ä‘á»•i quan trá»ng nháº¥t: nÃ³ khiáº¿n ngÆ°á»i chÆ¡i nháº£y THáº²NG LÃŠN
+            # dá»c theo bá»©c tÆ°á»ng, thay vÃ¬ bá»‹ Ä‘áº©y ra xa khá»i nÃ³.
+            jump_vx = 0
+
             self.vy = jump_vy
             self.vx = jump_vx
+            
+            # Dá»«ng tráº¡ng thÃ¡i trÆ°á»£t tÆ°á»ng SAU KHI Ä‘Ã£ nháº£y.
+            # Cooldown "re_attach_cooldown" sáº½ ngÄƒn nhÃ¢n váº­t bÃ¡m láº¡i tÆ°á»ng ngay láº­p tá»©c.
             self.wall_state.stop_slide()
-            print(f"🚀 WALL JUMP from {self.wall_state.side} wall!")
 
     def update_hitbox(self):
         self.hitbox.centerx = self.rect.centerx
@@ -491,12 +514,12 @@ class Player(pygame.sprite.Sprite):
         
         return (None, None, 0)
 
-    def update(self, platforms, world_x_offset, delta_time, wall_tiles=None, current_run_speed=RUN_SPEED): # Thêm current_run_speed
+    def update(self, platforms, world_x_offset, delta_time, wall_tiles=None, current_run_speed=RUN_SPEED):
         old_hitbox = self.hitbox.copy()
         
         self.wall_state.update(delta_time)
         
-        # === HORIZONTAL MOVEMENT ===
+        # === HORIZONTAL MOVEMENT (Screen Space) ===
         self.rect.x += self.vx
         self.vx *= PLAYER_DRAG_COEFFICIENT
         if abs(self.vx) < 0.1:
@@ -504,6 +527,7 @@ class Player(pygame.sprite.Sprite):
         self.update_hitbox()
         
         # === WALL COLLISION (Horizontal) ===
+        # Logic nÃ y giá» sáº½ tÃ´n trá»ng re_attach_cooldown trong wall_state
         if wall_tiles:
             side, wall_rect, overlap = self._check_wall_collision(self.hitbox, wall_tiles, world_x_offset)
             
@@ -511,15 +535,11 @@ class Player(pygame.sprite.Sprite):
                 if side == 'right' and self.vx >= 0:
                     self.hitbox.right = wall_rect.left
                     self.rect.centerx = self.hitbox.centerx
-                    # --- SỬA LOGIC Ở ĐÂY ---
-                    # Triệt tiêu vận tốc ngang để người chơi "dính" vào tường
                     self.vx = 0
                     self.wall_state.start_slide('right')
                 elif side == 'left' and self.vx <= 0:
                     self.hitbox.left = wall_rect.right
                     self.rect.centerx = self.hitbox.centerx
-                    # --- SỬA LOGIC Ở ĐÂY ---
-                    # Triệt tiêu vận tốc ngang để người chơi "dính" vào tường
                     self.vx = 0
                     self.wall_state.start_slide('left')
                 else:
@@ -543,7 +563,6 @@ class Player(pygame.sprite.Sprite):
         for p in platforms:
             platform_screen_rect = pygame.Rect(p.x - world_x_offset, p.y, p.length, 10)
             if self.hitbox.colliderect(platform_screen_rect):
-                # Only land if player is falling onto it from above.
                 if self.vy >= 0 and old_hitbox.bottom <= platform_screen_rect.top:
                     self.on_ground = True
                     self.vy = 0
@@ -583,12 +602,10 @@ class Player(pygame.sprite.Sprite):
         
         self.image = current_anim['frames'][self.current_frame]
         
-        # Flip sprite if sliding on the right wall
         if self.wall_state.side == 'right':
             self.image = pygame.transform.flip(self.image, True, False)
         
         return None
-
 # -------------------------
 # Game State Management
 # -------------------------
@@ -606,7 +623,7 @@ class PlayingState(GameState):
         self.level_file = level_file
         try: level_data = load_level(self.level_file)
         except Exception as e:
-            print(f"✗ Error loading {self.level_file}, falling back to default: {e}")
+            print(f"âœ— Error loading {self.level_file}, falling back to default: {e}")
             level_data = load_level(DEFAULT_LEVEL)
         self.is_endless = level_data["is_endless"]
         theme_name = level_data["theme"]
@@ -623,11 +640,14 @@ class PlayingState(GameState):
         self.background = MultiLayerBackground(PARALLAX_BACKGROUND_CONFIG)
         self.active_theme_tiles = LOADED_THEMES.get(theme_name)
         if not self.active_theme_tiles:
-            print(f"⚠️ Theme '{theme_name}' not found! Falling back.")
+            print(f"âš ï¸ Theme '{theme_name}' not found! Falling back.")
             self.active_theme_tiles = next(iter(LOADED_THEMES.values())) if LOADED_THEMES else None
         self.all_sprites = pygame.sprite.LayeredUpdates()
         self.real_obstacles = pygame.sprite.Group(); self.fake_obstacles = pygame.sprite.Group()
-        self.player = Player(50, GROUND_Y - 56)
+        
+        # --- THAY Äá»”I: Khá»Ÿi táº¡o player táº¡i PLAYER_TARGET_X ---
+        self.player = Player(PLAYER_TARGET_X, GROUND_Y - 56)
+        
         self.world_x_offset = 0
         self.visible_platforms = [] 
         self.visible_walls = []
@@ -638,13 +658,14 @@ class PlayingState(GameState):
         self.all_sprites.empty(); self.real_obstacles.empty(); self.fake_obstacles.empty()
         
         # Reset player state completely
-        self.player.rect.x = 50; self.player.rect.bottom = GROUND_Y
+        # --- THAY Äá»”I: Äáº·t láº¡i vá»‹ trÃ­ vá» PLAYER_TARGET_X ---
+        self.player.rect.x = PLAYER_TARGET_X
+        self.player.rect.bottom = GROUND_Y
         self.player.vy = 0; self.player.vx = 0; self.player.on_ground = True; self.player.state = 'run'
         self.player.current_frame = 0
         self.player.anim_timer = 0.0
         self.player.wall_state.reset()
         
-        # FIX 1: Crucially, sync the hitbox with the new rect position *before* the first update.
         self.player.update_hitbox()
         
         self.all_sprites.add(self.player)
@@ -653,11 +674,11 @@ class PlayingState(GameState):
         self.world_x_offset = 0; self.current_run_speed = RUN_SPEED
         self.visible_platforms.clear(); self.active_segments.clear(); self.cursor_x = 0
         self.visible_wall_tiles.clear()
-        self.visible_walls.clear() # FIX 1: Ensure walls are also cleared for a full reset.
+        self.visible_walls.clear()
 
         # Generate the starting area of the level
         if self.is_endless:
-            print(f"💡 Creating a {SAFE_ZONE_DISTANCE}px safe zone for endless mode.")
+            print(f"ðŸ’¡ Creating a {SAFE_ZONE_DISTANCE}px safe zone for endless mode.")
             safe_zone_config = {"type": "straight", "platform_y": GROUND_Y, "length": SAFE_ZONE_DISTANCE, "obstacles": []}
             safe_segment = TerrainGenerator.straight(self.cursor_x, safe_zone_config)
             self.active_segments.append(safe_segment)
@@ -667,7 +688,6 @@ class PlayingState(GameState):
         else:
             self._create_fixed_level()
             
-        # Pre-populate visible platforms for the first frame's collision check
         print(" priming initial platforms for collision...")
         initial_segments = self.active_segments if self.is_endless else self.world_data
         for seg in initial_segments:
@@ -677,7 +697,7 @@ class PlayingState(GameState):
         print(f"  -> Primed with {len(self.visible_platforms)} platforms.")
 
     def _create_fixed_level(self):
-        print("\n🎮 CREATING FIXED LEVEL")
+        print("\nðŸŽ® CREATING FIXED LEVEL")
         for seg in self.world_data:
             for ob_data in seg.get("obstacles", []): self._create_obstacle_sprite(ob_data)
         print("="*40 + "\n")
@@ -714,7 +734,12 @@ class PlayingState(GameState):
                 self.current_run_speed += SPEED_INCREASE_RATE * delta_time
             self.current_run_speed = min(self.current_run_speed, MAX_RUN_SPEED)
 
-        self.world_x_offset += self.current_run_speed * delta_time * 60
+        # 1. Cuá»™n mÃ n hÃ¬nh theo tá»‘c Ä‘á»™ cÆ¡ báº£n
+        base_scroll = self.current_run_speed * delta_time * 60
+        self.world_x_offset += base_scroll
+        
+        # --- THAY Äá»”I: ÄÃ£ loáº¡i bá» kiá»ƒm tra "Player was left behind" ---
+        # VÃ¬ ngÆ°á»i chÆ¡i Ä‘Æ°á»£c khÃ³a vÃ o PLAYER_TARGET_X, há» khÃ´ng thá»ƒ bá»‹ bá» láº¡i.
 
         # Clear physics lists for the current frame
         self.visible_platforms.clear()
@@ -723,16 +748,14 @@ class PlayingState(GameState):
 
         segments_to_draw = self.active_segments if self.is_endless else self.world_data
         
-        # --- NEW: Logic to dynamically create walls from platform edges ---
         DYNAMIC_WALL_WIDTH = 10
         WALL_TILE_HEIGHT = 40
 
+        # Táº¡o danh sÃ¡ch cÃ¡c váº­t thá»ƒ hiá»ƒn thá»‹ dá»±a trÃªn offset táº¡m thá»i
         for seg in segments_to_draw:
-            # 1. Add pre-defined walls from the level data (e.g., from wall_jump sections)
             for tile in seg.get("wall_tiles", []):
                 self.visible_wall_tiles.append(tile)
             
-            # 2. Process platforms to find visible ones and generate dynamic walls
             platforms = seg.get("platforms", [seg.get("platform")])
             for p in platforms:
                 if p is None: continue
@@ -741,41 +764,52 @@ class PlayingState(GameState):
                 if x_on_screen + p.length < -200 or x_on_screen > SCREEN_W + 200:
                     continue
                 
-                # This platform is visible, add it for physics and drawing
                 self.visible_platforms.append(p)
                 
-                # Generate wall tiles for the left and right sides of this platform
-                # The wall extends from the platform's surface down to the bottom of the screen
-                
-                # Left side wall (placed just to the left of the platform)
                 wall_x_left = p.x - DYNAMIC_WALL_WIDTH
                 for tile_y in range(int(p.y), SCREEN_H, WALL_TILE_HEIGHT):
                     self.visible_wall_tiles.append(WallTile(wall_x_left, tile_y, DYNAMIC_WALL_WIDTH, WALL_TILE_HEIGHT))
 
-                # Right side wall (placed at the right edge of the platform)
                 wall_x_right = p.x + p.length
                 for tile_y in range(int(p.y), SCREEN_H, WALL_TILE_HEIGHT):
                     self.visible_wall_tiles.append(WallTile(wall_x_right, tile_y, DYNAMIC_WALL_WIDTH, WALL_TILE_HEIGHT))
-        # --- END of new logic ---
 
-        # Now, update the player with a complete list of all walls (static and dynamic)
+        # 2. Cáº­p nháº­t Player (di chuyá»ƒn rect dá»±a trÃªn vx, xá»­ lÃ½ va cháº¡m)
         wall_check = self.player.update(
             self.visible_platforms, 
             self.world_x_offset, 
             delta_time, 
             wall_tiles=self.visible_wall_tiles,
-            current_run_speed=self.current_run_speed # <-- TRUYỀN VÀO ĐÂY
+            current_run_speed=self.current_run_speed
         )
         
+        # --- THAY Äá»”I: LOGIC CAMERA LOCK ---
+        # Chá»‰ Ã¡p dá»¥ng khÃ³a camera khi ngÆ°á»i chÆ¡i khÃ´ng trÆ°á»£t tÆ°á»ng.
+        # Khi trÆ°á»£t tÆ°á»ng, vá»‹ trÃ­ ngang cá»§a ngÆ°á»i chÆ¡i Ä‘Æ°á»£c quyáº¿t Ä‘á»‹nh bá»Ÿi va cháº¡m vá»›i tÆ°á»ng,
+        # khÃ´ng pháº£i bá»Ÿi vá»‹ trÃ­ má»¥c tiÃªu, giÃºp loáº¡i bá» hiá»‡n tÆ°á»£ng giáº­t lag.
+        if not self.player.wall_state.is_sliding:
+            # TÃ­nh toÃ¡n sá»± khÃ¡c biá»‡t giá»¯a vá»‹ trÃ­ hiá»‡n táº¡i vÃ  vá»‹ trÃ­ má»¥c tiÃªu
+            current_screen_x = self.player.rect.x
+            diff = current_screen_x - PLAYER_TARGET_X
+
+            # Äiá»u chá»‰nh offset tháº¿ giá»›i Ä‘á»ƒ bÃ¹ Ä‘áº¯p sá»± di chuyá»ƒn cá»§a ngÆ°á»i chÆ¡i
+            self.world_x_offset += diff
+
+            # KhÃ³a cá»©ng vá»‹ trÃ­ hiá»ƒn thá»‹ cá»§a ngÆ°á»i chÆ¡i táº¡i má»¥c tiÃªu
+            self.player.rect.x = PLAYER_TARGET_X
+            self.player.update_hitbox()
+
         if wall_check == "WALL_TIME_EXCEEDED":
             print("Game Over: Wall time exceeded!")
             self.game.flip_state("game_over")
             return
         
+        # Cáº­p nháº­t vá»‹ trÃ­ mÃ n hÃ¬nh cá»§a cÃ¡c sprite khÃ¡c dá»±a trÃªn world_x_offset Má»šI
         for sprite in self.all_sprites:
             if sprite != self.player:
                 sprite.update(self.world_x_offset, delta_time)
         
+        # Kiá»ƒm tra va cháº¡m vá»›i chÆ°á»›ng ngáº¡i váº­t (sá»­ dá»¥ng vá»‹ trÃ­ mÃ n hÃ¬nh Ä‘Ã£ cáº­p nháº­t)
         collisions = pygame.sprite.spritecollide(self.player, self.real_obstacles, False, collided=collide_player_hitbox)
         if collisions:
             print("Player collided with an obstacle! Game Over.")
@@ -784,11 +818,6 @@ class PlayingState(GameState):
 
         if self.player.rect.top > SCREEN_H:
             print("Player fell into the abyss! Game Over.")
-            self.game.flip_state("game_over")
-            return
-            
-        if self.player.rect.right < 0:
-            print("Player was left behind! Game Over.")
             self.game.flip_state("game_over")
             return
 
@@ -819,7 +848,6 @@ class PlayingState(GameState):
             self.all_sprites.draw(screen)
             return
 
-        # Get theme tiles
         tile_top_left = self.active_theme_tiles.get('wall_top_left')
         tile_top_middle = self.active_theme_tiles.get('wall_top_middle')
         tile_top_right = self.active_theme_tiles.get('wall_top_right')
@@ -829,7 +857,7 @@ class PlayingState(GameState):
         
         essential_tiles = [tile_top_left, tile_top_middle, tile_top_right, tile_middle_left, tile_middle_right]
         if not all(essential_tiles):
-            print("⚠️ Theme is missing essential wall tiles. Using fallback rendering.")
+            print("âš ï¸ Theme is missing essential wall tiles. Using fallback rendering.")
             self.draw_platforms_fallback(screen)
             self.all_sprites.draw(screen)
             return
@@ -837,7 +865,6 @@ class PlayingState(GameState):
         tile_size = tile_top_middle.get_width()
         if tile_size == 0: return
 
-        # --- REFACTORED: Draw platforms based on the visible_platforms list from update() ---
         for p in self.visible_platforms:
             x_on_screen = p.x - self.world_x_offset
             num_tiles_x = max(1, round(p.length / tile_size))
@@ -848,7 +875,7 @@ class PlayingState(GameState):
                 current_y = p.y + j * tile_size
                 if current_y > SCREEN_H: break
                 
-                if j == 0: # Top row of the platform
+                if j == 0:
                     for i in range(num_tiles_x):
                         tile_to_draw = tile_top_middle
                         if num_tiles_x > 1:
@@ -856,7 +883,7 @@ class PlayingState(GameState):
                             elif i == num_tiles_x - 1: tile_to_draw = tile_top_right
                         if tile_to_draw:
                             screen.blit(tile_to_draw, (x_on_screen + i * tile_size, p.y))
-                else: # Fill underneath the platform
+                else:
                     if num_tiles_x > 1:
                         screen.blit(tile_middle_left, (x_on_screen, current_y))
                         if tile_fill:
@@ -866,13 +893,7 @@ class PlayingState(GameState):
                     else:
                         screen.blit(tile_middle_left, (x_on_screen, current_y))
 
-        # --- The dynamic walls are not drawn, but the static ones from the level are ---
-        # This keeps the visuals clean, as the dynamic walls are invisible physics helpers.
         for wall_tile in self.visible_wall_tiles:
-            # We only want to draw walls that were part of the original level design.
-            # A simple check is to see if they are narrow (dynamic walls are wider).
-            # This avoids drawing the invisible physics walls. A better way would be a flag.
-            # For now, let's assume original walls have a specific width, e.g. 10.
             if wall_tile.width != 10: continue
 
             wall_rect = pygame.Rect(
@@ -896,7 +917,6 @@ class PlayingState(GameState):
 
         self.all_sprites.draw(screen)
 
-        # UI for wall slide timer
         if self.player.wall_state.is_sliding:
             wall_time_ratio = self.player.wall_state.time_elapsed / WALL_CLIMB_TIME_LIMIT
             bar_width, bar_height = 200, 20

@@ -3,16 +3,14 @@ SCREEN_W = 1024
 SCREEN_H = 700
 FPS = 60
 
+# Player settings
 PLAYER_W = 22       
 PLAYER_H = 36       
-
-JUMP_V = -13      # độ cao nhảy, càng nhỏ càng cao
-                    
-GRAVITY = 0.5      # độ rơi 
-                    
+JUMP_V = -13      # độ cao nhảy, càng nhỏ càng cao       
+GRAVITY = 0.5      # độ rơi             
 RUN_SPEED = 3.5
 
-# Cấu hình tăng tốc cho Endless Mode
+# Cấu hình Endless Mode
 SPEED_INCREASE_RATE = 0.2  # Tốc độ sẽ tăng thêm bao nhiêu mỗi giây
 MAX_RUN_SPEED = 15         # Tốc độ tối đa có thể đạt được
 SAFE_ZONE_DISTANCE = 200
@@ -26,7 +24,7 @@ PLAYER_DRAG_COEFFICIENT = 0.85      # Lực cản khi di chuyển ngang
 MAX_WALL_SLIDE_SPEED = 2.5        # Tốc độ tối đa khi trượt tường
 WALL_COUNTER_SCROLL_SPEED = RUN_SPEED
 
-PLAYER_TARGET_X = 250  # Vị trí X lý tưởng của player trên màn hình (tính từ trái)
+PLAYER_TARGET_X = 300  # Vị trí X lý tưởng của player trên màn hình (tính từ trái)
 CAMERA_CATCH_UP_SPEED_MULTIPLIER = 1.0  # Camera sẽ bắt kịp player nhanh đến mức nào
 
 # Game settings
