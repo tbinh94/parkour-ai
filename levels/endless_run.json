@@ -1,12 +1,11 @@
 {
   "mode": "endless",
   "theme": "abyss_ruins",
-
   "initial_speed": 5,
   "speed_scale_over_time": 0.03,
   "metadata": {
     "display_name": "∞ Endless Abyss",
-    "description": "Run forever. Speed increases gradually. Only death decides your fate.",
+    "description": "Run forever over changing terrain.",
     "difficulty": "Scaling",
     "badge": "🔥 Survival Mode",
     "is_always_visible": true
@@ -18,49 +17,39 @@
       "length": 400,
       "platform_y": 360,
       "obstacles": [
-        { "x": 140, "y": "ground", "kind": "enemy" },
-        { "x": 280, "y": "ground", "kind": "illusion" }
+        { "x": 200, "y": "ground", "kind": "fake" }
       ]
     },
     {
-      "id": "gap_jump",
-      "type": "gap",
-      "gap_length": 180,
-      "platform_y": 360
+      "id": "flat_empty",
+      "type": "straight",
+      "length": 500,
+      "platform_y": 360,
+      "obstacles": []
     },
     {
-      "id": "elevation_rise",
-      "type": "elevation",
+      "id": "vertical_wall_up",
+      "type": "wall_jump",
+      "height_change": 200,
       "direction": "up",
-      "slope_length": 250,
-      "start_y": 360,
-      "end_y": 300,
-      "obstacles": [
-        { "x": 120, "y": "slope", "kind": "illusion" }
-      ]
+      "shaft_width": 130,
+      "length": 100,
+      "obstacles": []
     },
     {
-      "id": "split_path",
-      "type": "branch",
-      "paths": [
-        {
-          "offset_y": 0,
-          "length": 320,
-          "label": "Safe"
-        },
-        {
-          "offset_y": -120,
-          "length": 320,
-          "label": "Risky",
-          "reward": { "type": "collectible", "position": { "x": 250, "y": 200 } }
-        }
-      ]
+      "id": "vertical_wall_down",
+      "type": "wall_jump",
+      "height_change": -200,
+      "direction": "down",
+      "shaft_width": 130,
+      "length": 100,
+      "obstacles": []
     }
   ],
-
   "spawn_logic": {
-    "order": "random",  
+    "order": "random",
     "allow_repeats": true,
-    "avoid_consecutive_same": true
+    "avoid_consecutive_same": true,
+    "y_connect_logic": "smooth"
   }
 }

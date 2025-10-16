@@ -3,48 +3,56 @@
   "sections": [
     {
       "type": "straight",
-      "length": 450,
+      "length": 300,
       "platform_y": 360,
       "obstacles": [
-        { "x": 120, "y": "ground", "kind": "enemy" },
-        { "x": 240, "y": "ground", "kind": "illusion" },
-        { "x": 360, "y": "ground", "kind": "enemy" }
+        { "x": 150, "y": "ground", "kind": "illusion" }
       ]
     },
     {
-      "type": "collapse",
-      "length": 500,
-      "platform_y": 360,
-      "collapse_speed": "medium",
-      "note": "Bridge planks fall behind the player",
+      "type": "gap",
+      "comment": "Cầu gãy, chỉ còn lại các trụ cầu",
+      "length": 600,
+      "base_y": 360,
+      "hazard": "abyss",
+      "platforms": [
+        { "x": 0, "width": 150, "y_offset": 0 },
+        { "x": 220, "width": 60, "y_offset": 0 },
+        { "x": 350, "width": 60, "y_offset": 10 },
+        { "x": 480, "width": 120, "y_offset": 0 }
+      ],
       "obstacles": [
-        { "x": 200, "y": "ground", "kind": "illusion" },
-        { "x": 350, "y": "ground", "kind": "enemy" }
+        { "platform_index": 1, "x": 30, "kind": "enemy" },
+        { "platform_index": 2, "x": 30, "kind": "illusion" }
       ]
     },
     {
       "type": "branch",
-      "branch_x": 550,
+      "branch_x": 100,
       "paths": [
         {
+          "type": "straight",
           "offset_y": 0,
-          "length": 380,
-          "label": "Safe Walkway",
+          "length": 400,
+          "label": "Main Deck",
           "obstacles": [
-            { "x": 80, "y": "ground", "kind": "enemy" },
-            { "x": 220, "y": "ground", "kind": "illusion" }
+            { "x": 200, "y": "ground", "kind": "enemy" }
           ]
         },
         {
-          "offset_y": -140,
-          "length": 420,
-          "label": "Broken Railings",
+          "type": "stairs_up",
+          "comment": "Leo lên dây văng của cầu",
+          "offset_y": -100,
+          "length": 400,
+          "label": "Suspension Cables",
+          "start_y": 260,
+          "step_count": 6,
+          "step_width": 80,
+          "step_height": 40,
           "obstacles": [
-            { "x": 40, "y": "ground", "kind": "illusion" },
-            { "x": 200, "y": "ground", "kind": "enemy" },
-            { "x": 300, "y": "midair", "kind": "illusion" }
+            { "step_index": 3, "x_offset": 40, "kind": "enemy" }
           ],
-          "reward": { "type": "collectible", "position": { "x": 350, "y": 160 } }
+          "reward": { "type": "collectible", "position": { "x": 350, "y": 50 } }
         }
       ]
     },
@@ -54,20 +62,11 @@
       "platform_y": 360,
       "hazard_scroll": "ghost_wall",
       "speed": "fast",
-      "note": "Player must keep moving forward or be consumed",
+      "note": "Sàn cầu rung lắc kết hợp chướng ngại vật",
       "obstacles": [
         { "x": 150, "y": "ground", "kind": "illusion" },
         { "x": 320, "y": "ground", "kind": "enemy" },
         { "x": 480, "y": "ground", "kind": "illusion" }
-      ]
-    },
-    {
-      "type": "straight",
-      "length": 350,
-      "platform_y": 360,
-      "note": "Calm before exit",
-      "obstacles": [
-        { "x": 200, "y": "ground", "kind": "enemy" }
       ]
     }
   ],
@@ -75,6 +74,6 @@
     "display_name": "3. 👻 Haunted Bridge",
     "order": 3,
     "difficulty": "Medium",
-    "description": "A crumbling bridge haunted by ghosts. Keep moving, or be taken."
+    "description": "Jump across broken pillars and climb the suspension cables to escape."
   }
 }

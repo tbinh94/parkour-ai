@@ -3,289 +3,71 @@
   "sections": [
     {
       "type": "straight",
+      "length": 300,
+      "platform_y": 400,
+      "obstacles": [
+        { "x": 150, "y": "ground", "kind": "real" }
+      ]
+    },
+    {
+      "type": "branch",
+      "branch_x": 50,
+      "paths": [
+        {
+          "type": "straight",
+          "offset_y": 0,
+          "length": 600,
+          "label": "The Long Hall",
+          "obstacles": [
+            { "x": 100, "y": "ground", "kind": "real" },
+            { "x": 200, "y": "ground", "kind": "real" },
+            { "x": 350, "y": "ground", "kind": "fake" },
+            { "x": 500, "y": "ground", "kind": "real" }
+          ]
+        },
+        {
+          "type": "wall_jump",
+          "comment": "Đường tắt kỹ thuật cao: Bật tường thẳng đứng",
+          "label": "Ventilation Shaft",
+          "length": 200, 
+          "entry_y": 400,
+          "exit_y": 150,
+          "shaft_width": 140,
+          "obstacles": [
+            { "y": 350, "side": "left", "kind": "spikes" },
+            { "y": 280, "side": "right", "kind": "spikes" },
+            { "y": 200, "side": "left", "kind": "spikes" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stairs_up",
+      "comment": "Cầu thang dài kiệt sức sau khi hợp nhánh",
+      "start_y": 400,
+      "end_y_override": 150, 
+      "step_count": 10,
+      "step_width": 90,
+      "step_height": 25,
+      "obstacles": [
+        { "step_index": 2, "x_offset": 45, "kind": "real" },
+        { "step_index": 5, "x_offset": 45, "kind": "fake" },
+        { "step_index": 8, "x_offset": 45, "kind": "real" }
+      ]
+    },
+    {
+      "type": "gap",
+      "comment": "Nhảy chính xác qua bẫy chông",
       "length": 400,
-      "platform_y": 360,
+      "base_y": 150,
+      "hazard": "spikes",
+      "platforms": [
+        { "x": 0, "width": 80, "y_offset": 0 },
+        { "x": 150, "width": 50, "y_offset": 0 },
+        { "x": 280, "width": 120, "y_offset": 0 }
+      ],
       "obstacles": [
-        {
-          "x": 100,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 200,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 300,
-          "y": "ground",
-          "kind": "fake"
-        }
-      ]
-    },
-    {
-      "type": "branch",
-      "branch_x": 420,
-      "paths": [
-        {
-          "offset_y": 0,
-          "length": 550,
-          "obstacles": [
-            {
-              "x": 80,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 160,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 240,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 340,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 450,
-              "y": "ground",
-              "kind": "fake"
-            }
-          ]
-        },
-        {
-          "offset_y": -150,
-          "length": 550,
-          "obstacles": [
-            {
-              "x": 110,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 210,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 310,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 420,
-              "y": "ground",
-              "kind": "real"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "straight",
-      "length": 600,
-      "platform_y": 360,
-      "obstacles": [
-        {
-          "x": 90,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 180,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 270,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 380,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 500,
-          "y": "ground",
-          "kind": "real"
-        }
-      ]
-    },
-    {
-      "type": "branch",
-      "branch_x": 1570,
-      "paths": [
-        {
-          "offset_y": 0,
-          "length": 500,
-          "obstacles": [
-            {
-              "x": 70,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 150,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 230,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 320,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 420,
-              "y": "ground",
-              "kind": "real"
-            }
-          ]
-        },
-        {
-          "offset_y": -170,
-          "length": 500,
-          "obstacles": [
-            {
-              "x": 100,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 200,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 300,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 400,
-              "y": "ground",
-              "kind": "fake"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "straight",
-      "length": 700,
-      "platform_y": 360,
-      "obstacles": [
-        {
-          "x": 100,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 200,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 300,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 420,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 550,
-          "y": "ground",
-          "kind": "fake"
-        }
-      ]
-    },
-    {
-      "type": "branch",
-      "branch_x": 2770,
-      "paths": [
-        {
-          "offset_y": 0,
-          "length": 450,
-          "obstacles": [
-            {
-              "x": 80,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 170,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 260,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 360,
-              "y": "ground",
-              "kind": "fake"
-            }
-          ]
-        },
-        {
-          "offset_y": -140,
-          "length": 450,
-          "obstacles": [
-            {
-              "x": 120,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 220,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 330,
-              "y": "ground",
-              "kind": "real"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "straight",
-      "length": 500,
-      "platform_y": 360,
-      "obstacles": [
-        {
-          "x": 150,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 280,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 400,
-          "y": "ground",
-          "kind": "real"
-        }
+        { "x": 215, "y": "midair", "kind": "fake" }
       ]
     }
   ],
@@ -293,6 +75,6 @@
     "display_name": "5. ⚔️ The Gauntlet",
     "order": 5,
     "difficulty": "Hard",
-    "description": "Survive the ultimate test of skill"
+    "description": "Survive the wall jumps and treacherous gaps of the gauntlet."
   }
 }

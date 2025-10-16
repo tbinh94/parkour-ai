@@ -1,35 +1,38 @@
 
-# Screen settings
 SCREEN_W = 1024
 SCREEN_H = 700
 FPS = 60
 
-# Player settings - BALANCED PHYSICS (Based on analysis)
 PLAYER_W = 22       
 PLAYER_H = 36       
 
-# Physics được điều chỉnh dựa trên physics_test.py analysis
-JUMP_V = -13      # Giảm từ -13.5 xuống -12 để nhảy thấp hơn (96px max height)
-                    # Vẫn đủ để vượt obstacle 50px với 10px clearance
+JUMP_V = -13      # độ cao nhảy, càng nhỏ càng cao
                     
-GRAVITY = 0.5      # Giữ nguyên - rơi mượt mà, realistic
+GRAVITY = 0.5      # độ rơi 
                     
-RUN_SPEED = 3.5     # Giữ nguyên - tốc độ vừa phải
-                    # Total air time: 32 frames (~0.53s)
-                    # Jump distance: 112px
+RUN_SPEED = 3
 
 # Cấu hình tăng tốc cho Endless Mode
 SPEED_INCREASE_RATE = 0.2  # Tốc độ sẽ tăng thêm bao nhiêu mỗi giây
 MAX_RUN_SPEED = 15         # Tốc độ tối đa có thể đạt được
-SAFE_ZONE_DISTANCE = 50
+SAFE_ZONE_DISTANCE = 200
 
+# --- WALL JUMP PHYSICS ---
+WALL_CLIMB_TIME_LIMIT = 3.0          # Thời gian tối đa bám tường (giây)
+WALL_CLIMB_WARNING_TIME = 1.5        # Thời điểm bắt đầu cảnh báo (giây)
+WALL_PUSH_BACK_SPEED = 150           # Tốc độ đẩy lùi tường
+CONSECUTIVE_WALL_JUMP_COOLDOWN = 0.1 # Cooldown giữa các lần nhảy liên tiếp
+PLAYER_DRAG_COEFFICIENT = 0.85      # Lực cản khi di chuyển ngang
+MAX_WALL_SLIDE_SPEED = 150          # Tốc độ tối đa khi trượt tường
+
+PLAYER_TARGET_X = 150  # Vị trí X lý tưởng của player trên màn hình (tính từ trái)
+CAMERA_CATCH_UP_SPEED_MULTIPLIER = 2.0  # Camera sẽ bắt kịp player nhanh đến mức nào
 
 # Game settings
 GROUND_Y = 360
 MAX_STEPS_PER_GENOME = 2000
 DEFAULT_GENERATIONS = 40
-DEFAULT_LEVEL = "level_tutorial.json"  # Đổi default sang tutorial
-
+DEFAULT_LEVEL = "level_tutorial.json" 
 
 # --- TILESET SETTINGS ---
 TILE_SIZE = 16

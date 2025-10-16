@@ -5,9 +5,24 @@
       "file": "assets/tilesets/dungeon_tileset.png",
       "tile_size": 16,
       "mapping": {
+        "comment": "Tọa độ dạng [cột, hàng], bắt đầu từ 0",
+        
         "ground_left": [0, 19],
         "ground_middle": [1, 19],
-        "ground_right": [2, 19]
+        "ground_right": [2, 19],
+        
+        "wall_top_left":     [0, 0],
+        "wall_top_middle":   [1, 0],
+        "wall_top_right":    [2, 0],
+
+        "wall_middle_left":  [0, 1],
+        "wall_middle_right": [2, 1],
+        
+        "wall_bottom_left":  [0, 2],
+        "wall_bottom_right": [2, 2],
+
+        "ground_single":     [1, 3],
+        "wall_fill":         [1, 2]
       }
     }
   ]

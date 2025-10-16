@@ -3,173 +3,66 @@
   "sections": [
     {
       "type": "straight",
-      "comment": "Khởi động: Dạy nhịp điệu cơ bản real-fake-real",
-      "length": 550,
-      "platform_y": 360,
+      "comment": "Khởi động nhịp điệu",
+      "length": 300,
+      "platform_y": 200,
       "obstacles": [
-        {
-          "x": 150,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 290,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 430,
-          "y": "ground",
-          "kind": "real"
-        }
+        { "x": 150, "y": "ground", "kind": "real" }
+      ]
+    },
+    {
+      "type": "stairs_down",
+      "comment": "Lao nhanh xuống sâu trong Keep",
+      "start_y": 200,
+      "step_count": 8,
+      "step_width": 100,
+      "step_height": 30,
+      "obstacles": [
+        { "step_index": 1, "x_offset": 50, "kind": "fake" },
+        { "step_index": 3, "x_offset": 50, "kind": "real" },
+        { "step_index": 5, "x_offset": 50, "kind": "real" },
+        { "step_index": 7, "x_offset": 50, "kind": "fake" }
       ]
     },
     {
       "type": "branch",
-      "comment": "Lựa chọn 1: Giới thiệu cặp real-real hoặc nhảy chính xác",
-      "branch_x": 570,
+      "branch_x": 100,
+      "platform_y": 440,
       "paths": [
         {
+          "type": "straight",
           "offset_y": 0,
-          "comment": "Đường dưới: Thử thách nhịp điệu với cặp real-real đầu tiên",
           "length": 500,
+          "comment": "Đường dưới bằng phẳng nhưng nhiều bẫy",
           "obstacles": [
-            {
-              "x": 120,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 260,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 410,
-              "y": "ground",
-              "kind": "fake"
-            }
+            { "x": 120, "y": "ground", "kind": "real" },
+            { "x": 260, "y": "ground", "kind": "real" },
+            { "x": 410, "y": "ground", "kind": "fake" }
           ]
         },
         {
-          "offset_y": -140,
-          "comment": "Đường trên: An toàn hơn nhưng yêu cầu nhảy chính xác",
+          "type": "stairs_up",
+          "offset_y": 0,
           "length": 500,
+          "comment": "Đường trên leo lên tháp canh",
+          "start_y": 440,
+          "step_count": 5,
+          "step_width": 100,
+          "step_height": 50,
           "obstacles": [
-            {
-              "x": 180,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 350,
-              "y": "ground",
-              "kind": "real"
-            }
+            { "step_index": 2, "x_offset": 50, "kind": "fake" },
+            { "y": "midair", "x": 300, "kind": "real" }
           ]
         }
       ]
     },
     {
       "type": "straight",
-      "comment": "Củng cố: Kết hợp các chuỗi nhảy với khoảng cách vừa phải",
-      "length": 650,
-      "platform_y": 360,
-      "obstacles": [
-        {
-          "x": 100,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 220,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 350,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 500,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 620,
-          "y": "ground",
-          "kind": "real"
-        }
-      ]
-    },
-    {
-      "type": "branch",
-      "comment": "Lựa chọn 2: Bài kiểm tra cuối cùng - chuỗi 3 hoặc né bẫy",
-      "branch_x": 1720,
-      "paths": [
-        {
-          "offset_y": 0,
-          "comment": "Đường dưới: Thử thách cuối cùng với chuỗi 3 real",
-          "length": 500,
-          "obstacles": [
-            {
-              "x": 120,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 210,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 330,
-              "y": "ground",
-              "kind": "real"
-            }
-          ]
-        },
-        {
-          "offset_y": -150,
-          "comment": "Đường trên: Ít vật cản hơn nhưng có bẫy tâm lý",
-          "length": 500,
-          "obstacles": [
-            {
-              "x": 150,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 290,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 430,
-              "y": "ground",
-              "kind": "real"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "straight",
-      "comment": "Đoạn kết: Thư giãn với các cú nhảy đơn giản",
       "length": 400,
-      "platform_y": 360,
+      "platform_y": 440,
+      "comment": "Hội tụ và kết thúc",
       "obstacles": [
-        {
-          "x": 130,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 280,
-          "y": "ground",
-          "kind": "fake"
-        }
+        { "x": 200, "y": "ground", "kind": "real" }
       ]
     }
   ],
@@ -177,6 +70,6 @@
     "display_name": "4. 🏰 Crimson Keep",
     "order": 4,
     "difficulty": "Medium",
-    "description": "Master the rhythm of danger in the keep"
+    "description": "Master the rhythm on the spiraling stairs of the keep."
   }
 }

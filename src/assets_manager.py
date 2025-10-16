@@ -1,7 +1,7 @@
 # src/assets_manager.py
 import pygame
 import json
-import os # Thêm import os
+import os
 
 # --- GLOBAL ASSETS ---
 LOADED_THEMES = {}
@@ -13,14 +13,9 @@ def load_assets():
     print("🎨 Loading all themes from themes.json...")
 
     try:
-        # SỬA LỖI TẠI ĐÂY: Xây dựng đường dẫn đầy đủ đến file themes.json
-        # 1. Lấy đường dẫn đến file assets_manager.py này
         current_file_path = os.path.abspath(__file__)
-        # 2. Đi ngược lên một cấp để ra thư mục /src
         src_dir = os.path.dirname(current_file_path)
-        # 3. Đi ngược lên một cấp nữa để ra thư mục gốc của dự án
         project_root = os.path.dirname(src_dir)
-        # 4. Tạo đường dẫn đầy đủ đến themes.json
         themes_filepath = os.path.join(project_root, "assets/themes.json")
 
         print(f"  -> Looking for themes config at: {themes_filepath}")
@@ -37,7 +32,7 @@ def load_assets():
 
     for theme in themes_data.get("themes", []):
         theme_name = theme.get("name", "").strip()
-        filepath_relative = theme.get("file") # Đây là đường dẫn tương đối từ file JSON
+        filepath_relative = theme.get("file")
         tile_size = theme.get("tile_size")
         mapping = theme.get("mapping")
 
@@ -45,7 +40,6 @@ def load_assets():
             print(f"  ⚠️ Skipping theme due to missing data: {theme}")
             continue
 
-        # Tạo đường dẫn đầy đủ đến file ảnh tileset
         filepath_full = os.path.join(project_root, filepath_relative)
         print(f"  -> Loading theme: '{theme_name}' from '{filepath_full}'")
         LOADED_THEMES[theme_name] = {}
@@ -64,9 +58,15 @@ def load_assets():
 
             cols = sheet_width // tile_size
             print(f"     - Tileset dimensions: {sheet_width}x{sheet_height} pixels")
-            print(f"     - Expected tiles to map: {list(mapping.keys())}")
+            print(f"     - Mapping {len(mapping)} entries...")
 
+            # --- SỬA LỖI TẠI ĐÂY ---
             for tile_name, pos in mapping.items():
+                # Bỏ qua các mục không phải là tọa độ hợp lệ (ví dụ: "comment")
+                if not isinstance(pos, list) or len(pos) != 2:
+                    print(f"     - Skipping non-coordinate entry: '{tile_name}'")
+                    continue
+
                 col, row = pos
                 if col < cols:
                     tile_index = row * cols + col
@@ -83,6 +83,6 @@ def load_assets():
             print(f"     - ❌ Error loading spritesheet for theme '{theme_name}': {e}")
             placeholder = pygame.Surface((tile_size, tile_size))
             placeholder.fill((255, 0, 255))
-            LOADED_THEMES[theme_name] = {name: placeholder for name in mapping.keys()}
+            LOADED_THEMES[theme_name] = {name: placeholder for name, val in mapping.items() if isinstance(val, list)}
 
     print(f"✓ Asset loading complete. Loaded {len(LOADED_THEMES)} themes.")

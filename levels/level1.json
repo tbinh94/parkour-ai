@@ -3,115 +3,97 @@
   "sections": [
     {
       "type": "straight",
-      "length": 350,
+      "length": 300,
       "platform_y": 360,
       "obstacles": [
-        { "x": 120, "y": "ground", "kind": "fake" },
-        { "x": 240, "y": "ground", "kind": "real" },
-        { "x": 330, "y": "ground", "kind": "fake" }
+        { "x": 150, "y": "ground", "kind": "real" }
       ]
     },
     {
-      "type": "elevation",
-      "direction": "up",
-      "slope_length": 200,
+      "type": "stairs_up",
+      "comment": "Giới thiệu cầu thang lên, yêu cầu nhảy nhịp nhàng",
       "start_y": 360,
-      "end_y": 280,
+      "step_count": 4,
+      "step_width": 120,
+      "step_height": 30,
       "obstacles": [
-        { "x": 80, "y": "slope", "kind": "real" },
-        { "x": 150, "y": "slope", "kind": "fake" }
+        { "step_index": 1, "x_offset": 60, "kind": "fake" },
+        { "step_index": 3, "x_offset": 50, "kind": "real" }
       ]
     },
     {
       "type": "straight",
-      "length": 250,
-      "platform_y": 280,
-      "obstacles": [
-        { "x": 50, "y": "ground", "kind": "real" },
-        { "x": 200, "y": "ground", "kind": "fake" }
-      ]
+      "length": 200,
+      "platform_y": 240,
+      "obstacles": []
     },
     {
       "type": "branch",
-      "branch_x": 260,
+      "branch_x": 100,
       "paths": [
         {
           "offset_y": 0,
           "length": 320,
           "label": "Safe Path",
           "obstacles": [
-            { "x": 70, "y": "ground", "kind": "fake" },
-            { "x": 200, "y": "ground", "kind": "real" }
+            { "x": 150, "y": "ground", "kind": "real" }
           ]
         },
         {
-          "offset_y": -150,
-          "length": 380,
-          "label": "Risky Path",
+          "type": "stairs_down",
+          "comment": "Nhánh rủi ro đi xuống hầm mộ sâu hơn",
+          "offset_y": 0,
+          "length": 320,
+          "label": "Risky Stairs",
+          "start_y": 240,
+          "step_count": 5,
+          "step_width": 100,
+          "step_height": 40,
           "obstacles": [
-            { "x": 40, "y": "ground", "kind": "real" },
-            { "x": 150, "y": "ground", "kind": "real" },
-            { "x": 290, "y": "ground", "kind": "fake" }
+            { "step_index": 2, "x_offset": 50, "kind": "real" },
+            { "step_index": 4, "x_offset": 50, "kind": "fake" }
           ],
-          "reward": { "type": "collectible", "position": { "x": 310, "y": 200 } }
+          "reward": { "type": "collectible", "position": { "step_index": 3, "y_offset": -100 } }
         }
       ]
     },
     {
       "type": "drop",
-      "drop_x": 600,
-      "height": 200,
-      "landing_y": 420,
-      "obstacles": [
-        { "x": 20, "y": "midair", "kind": "fake" }
-      ]
+      "drop_x": 100,
+      "height": 150,
+      "landing_y": 450,
+      "obstacles": []
     },
     {
-      "type": "straight",
-      "length": 450,
-      "platform_y": 420,
-      "obstacles": [
-        { "x": 100, "y": "ground", "kind": "real" },
-        { "x": 190, "y": "ground", "kind": "fake" },
-        { "x": 320, "y": "ground", "kind": "real" },
-        { "x": 390, "y": "ground", "kind": "fake" }
-      ]
-    },
-    {
-      "type": "elevation",
-      "direction": "up",
-      "slope_length": 200,
-      "start_y": 420,
-      "end_y": 320,
-      "obstacles": [
-        { "x": 100, "y": "slope", "kind": "fake" }
-      ]
-    },
-    {
-      "type": "straight",
-      "length": 280,
-      "platform_y": 320,
-      "obstacles": [
-        { "x": 80, "y": "ground", "kind": "real" },
-        { "x": 220, "y": "ground", "kind": "fake" }
-      ]
-    },
-    {
-      "type": "arena",
-      "center_x": 150,
-      "width": 300,
-      "platform_y": 320,
-      "obstacles": [
-        { "x": 50, "y": "ground", "kind": "real" },
-        { "x": 250, "y": "ground", "kind": "real" }
+      "type": "gap",
+      "comment": "Khu vực ngập nước với các tảng đá nổi",
+      "length": 500,
+      "base_y": 450,
+      "hazard": "water",
+      "platforms": [
+        { "x": 0, "width": 100, "y_offset": 0 },
+        { "x": 180, "width": 80, "y_offset": 0 },
+        { "x": 320, "width": 80, "y_offset": -20 },
+        { "x": 450, "width": 50, "y_offset": 0 }
       ],
-      "note": "Possible miniboss / fast obstacle sequence"
+      "obstacles": [
+        { "platform_index": 1, "x": 40, "kind": "fake" },
+        { "x": 250, "y": "midair", "kind": "real" }
+      ]
+    },
+    {
+      "type": "straight",
+      "length": 300,
+      "platform_y": 450,
+      "obstacles": [
+        { "x": 150, "y": "ground", "kind": "real" }
+      ]
     }
   ],
   "metadata": {
     "display_name": "2. 🌫 Echoes of the Forsaken",
     "order": 2,
     "difficulty": "Medium",
-    "description": "A gloomy descent into forgotten tombs. Only those who dare will find the hidden path."
+    "description": "Descend via ancient stairs and cross the flooded crypts."
   }
 }

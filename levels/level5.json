@@ -3,247 +3,83 @@
   "sections": [
     {
       "type": "straight",
-      "length": 450,
+      "length": 300,
       "platform_y": 360,
       "obstacles": [
-        {
-          "x": 90,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 180,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 270,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 360,
-          "y": "ground",
-          "kind": "real"
-        }
+        { "x": 150, "y": "ground", "kind": "real" }
       ]
     },
     {
       "type": "branch",
-      "branch_x": 470,
+      "comment": "Cây Cầu Gãy Vụn vs Đường Hầm Bí Mật",
+      "branch_x": 100,
       "paths": [
         {
-          "offset_y": 0,
-          "length": 480,
+          "type": "gap",
+          "label": "Shattered Bridge",
+          "length": 800,
+          "base_y": 360,
+          "hazard": "abyss",
+          "comment": "Các bục rất nhỏ và xa nhau",
+          "platforms": [
+            { "x": 0, "width": 100, "y_offset": 0 },
+            { "x": 200, "width": 40, "y_offset": 0 },
+            { "x": 350, "width": 40, "y_offset": -20 },
+            { "x": 500, "width": 40, "y_offset": 20 },
+            { "x": 700, "width": 100, "y_offset": 0 }
+          ],
           "obstacles": [
-            {
-              "x": 70,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 150,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 230,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 310,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 400,
-              "y": "ground",
-              "kind": "real"
-            }
+            { "x": 275, "y": "midair", "kind": "real" },
+            { "x": 425, "y": "midair", "kind": "fake" }
           ]
         },
         {
-          "offset_y": -160,
-          "length": 480,
-          "obstacles": [
+          "type": "section_sequence",
+          "label": "Hidden Tunnel",
+          "length": 800,
+          "offset_y": 200,
+          "sequence": [
             {
-              "x": 100,
-              "y": "ground",
-              "kind": "real"
+              "type": "stairs_down",
+              "start_y": 360,
+              "step_count": 5,
+              "step_width": 80,
+              "step_height": 40,
+              "obstacles": []
             },
             {
-              "x": 220,
-              "y": "ground",
-              "kind": "real"
+              "type": "wall_jump",
+              "entry_y": 560,
+              "exit_y": 360,
+              "shaft_width": 120,
+              "length": 150,
+              "obstacles": [ { "y": 460, "side": "lmr_moving", "kind": "sawblade" } ]
             },
             {
-              "x": 350,
-              "y": "ground",
-              "kind": "real"
+              "type": "straight",
+              "length": 250,
+              "platform_y": 360,
+              "obstacles": [ { "x": 100, "y": "ground", "kind": "real" } ]
             }
           ]
         }
       ]
     },
     {
-      "type": "straight",
-      "comment": "Hành Lang Ảo Ảnh",
-      "length": 800,
-      "platform_y": 360,
+      "type": "stairs_up",
+      "comment": "Cổng Thánh Địa - Đại Thang",
+      "start_y": 360,
+      "step_count": 12,
+      "step_width": 80,
+      "step_height": 30,
+      "note": "Nhịp độ nhanh, kết hợp real/fake liên tục",
       "obstacles": [
-        {
-          "x": 80,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 160,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 240,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 350,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 450,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 550,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 650,
-          "y": "ground",
-          "kind": "fake"
-        }
-      ]
-    },
-    {
-      "type": "branch",
-      "comment": "Cây Cầu Gãy Vụn",
-      "branch_x": 1770,
-      "paths": [
-        {
-          "offset_y": 0,
-          "length": 830,
-          "obstacles": [
-            {
-              "x": 90,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 240,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 390,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 540,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 700,
-              "y": "ground",
-              "kind": "fake"
-            }
-          ]
-        },
-        {
-          "offset_y": -150,
-          "length": 830,
-          "obstacles": [
-            {
-              "x": 120,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 280,
-              "y": "ground",
-              "kind": "fake"
-            },
-            {
-              "x": 440,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 600,
-              "y": "ground",
-              "kind": "real"
-            },
-            {
-              "x": 750,
-              "y": "ground",
-              "kind": "real"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "straight",
-      "comment": "Cổng Thánh Địa",
-      "length": 900,
-      "platform_y": 360,
-      "obstacles": [
-        {
-          "x": 100,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 180,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 300,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 420,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 500,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 620,
-          "y": "ground",
-          "kind": "fake"
-        },
-        {
-          "x": 750,
-          "y": "ground",
-          "kind": "real"
-        },
-        {
-          "x": 830,
-          "y": "ground",
-          "kind": "real"
-        }
+        { "step_index": 1, "x_offset": 40, "kind": "real" },
+        { "step_index": 3, "x_offset": 40, "kind": "fake" },
+        { "step_index": 4, "x_offset": 40, "kind": "real" },
+        { "step_index": 7, "x_offset": 40, "kind": "real" },
+        { "step_index": 9, "x_offset": 40, "kind": "fake" },
+        { "step_index": 11, "x_offset": 40, "kind": "real" }
       ]
     }
   ],
@@ -251,6 +87,6 @@
     "display_name": "6. ⛩️ Road to The Shrine",
     "order": 6,
     "difficulty": "Expert",
-    "description": "The final trial before enlightenment"
+    "description": "The ultimate trial of precision: gaps, wall jumps, and the grand staircase."
   }
 }
