@@ -745,20 +745,31 @@ class PlayingState(GameState):
         self.visible_platforms.clear()
         self.visible_walls.clear()
         self.visible_wall_tiles.clear()
-
-        segments_to_draw = self.active_segments if self.is_endless else self.world_data
         
         DYNAMIC_WALL_WIDTH = 10
         WALL_TILE_HEIGHT = 40
+        segments_to_draw = self.active_segments if self.is_endless else self.world_data
+        # DEBUG
+        print(f"\n=== FRAME DEBUG ===")
+        print(f"Total segments: {len(segments_to_draw)}")
+        for i, seg in enumerate(segments_to_draw):
+            wall_tiles = seg.get("wall_tiles", [])
+            if wall_tiles:
+                print(f"  Segment {i}: type={seg.get('type')}, wall_tiles={len(wall_tiles)}")
+                for j, tile in enumerate(wall_tiles[:2]):  # Print first 2 tiles
+                    print(f"    Tile {j}: x={tile.x}, y={tile.y}, w={tile.width}, h={tile.tile_height}")        
 
-        # Táº¡o danh sÃ¡ch cÃ¡c váº­t thá»ƒ hiá»ƒn thá»‹ dá»±a trÃªn offset táº¡m thá»i
+        # Collect visible platforms and wall tiles from segments
         for seg in segments_to_draw:
+            # Add wall tiles from segment (from wall_jump sections)
             for tile in seg.get("wall_tiles", []):
                 self.visible_wall_tiles.append(tile)
             
+            # Add platforms
             platforms = seg.get("platforms", [seg.get("platform")])
             for p in platforms:
-                if p is None: continue
+                if p is None: 
+                    continue
                 
                 x_on_screen = p.x - self.world_x_offset
                 if x_on_screen + p.length < -200 or x_on_screen > SCREEN_W + 200:
@@ -766,14 +777,8 @@ class PlayingState(GameState):
                 
                 self.visible_platforms.append(p)
                 
-                wall_x_left = p.x - DYNAMIC_WALL_WIDTH
-                for tile_y in range(int(p.y), SCREEN_H, WALL_TILE_HEIGHT):
-                    self.visible_wall_tiles.append(WallTile(wall_x_left, tile_y, DYNAMIC_WALL_WIDTH, WALL_TILE_HEIGHT))
-
-                wall_x_right = p.x + p.length
-                for tile_y in range(int(p.y), SCREEN_H, WALL_TILE_HEIGHT):
-                    self.visible_wall_tiles.append(WallTile(wall_x_right, tile_y, DYNAMIC_WALL_WIDTH, WALL_TILE_HEIGHT))
-
+                
+        
         # 2. Cáº­p nháº­t Player (di chuyá»ƒn rect dá»±a trÃªn vx, xá»­ lÃ½ va cháº¡m)
         wall_check = self.player.update(
             self.visible_platforms, 
@@ -787,17 +792,16 @@ class PlayingState(GameState):
         # Chá»‰ Ã¡p dá»¥ng khÃ³a camera khi ngÆ°á»i chÆ¡i khÃ´ng trÆ°á»£t tÆ°á»ng.
         # Khi trÆ°á»£t tÆ°á»ng, vá»‹ trÃ­ ngang cá»§a ngÆ°á»i chÆ¡i Ä‘Æ°á»£c quyáº¿t Ä‘á»‹nh bá»Ÿi va cháº¡m vá»›i tÆ°á»ng,
         # khÃ´ng pháº£i bá»Ÿi vá»‹ trÃ­ má»¥c tiÃªu, giÃºp loáº¡i bá» hiá»‡n tÆ°á»£ng giáº­t lag.
-        if not self.player.wall_state.is_sliding:
-            # TÃ­nh toÃ¡n sá»± khÃ¡c biá»‡t giá»¯a vá»‹ trÃ­ hiá»‡n táº¡i vÃ  vá»‹ trÃ­ má»¥c tiÃªu
-            current_screen_x = self.player.rect.x
-            diff = current_screen_x - PLAYER_TARGET_X
+       # Tính toán sự khác biệt giữa vị trí hiện tại và vị trí mục tiêu
+        current_screen_x = self.player.rect.x
+        diff = current_screen_x - PLAYER_TARGET_X
 
-            # Äiá»u chá»‰nh offset tháº¿ giá»›i Ä‘á»ƒ bÃ¹ Ä‘áº¯p sá»± di chuyá»ƒn cá»§a ngÆ°á»i chÆ¡i
-            self.world_x_offset += diff
+        # Điều chỉnh offset thế giới để bù đắp sự di chuyển của người chơi
+        self.world_x_offset += diff
 
-            # KhÃ³a cá»©ng vá»‹ trÃ­ hiá»ƒn thá»‹ cá»§a ngÆ°á»i chÆ¡i táº¡i má»¥c tiÃªu
-            self.player.rect.x = PLAYER_TARGET_X
-            self.player.update_hitbox()
+        # Khóa cứng vị trí hiển thị của người chơi tại mục tiêu
+        self.player.rect.x = PLAYER_TARGET_X
+        self.player.update_hitbox()
 
         if wall_check == "WALL_TIME_EXCEEDED":
             print("Game Over: Wall time exceeded!")
@@ -857,30 +861,35 @@ class PlayingState(GameState):
         
         essential_tiles = [tile_top_left, tile_top_middle, tile_top_right, tile_middle_left, tile_middle_right]
         if not all(essential_tiles):
-            print("âš ï¸ Theme is missing essential wall tiles. Using fallback rendering.")
+            print("⚠️ Theme is missing essential wall tiles. Using fallback rendering.")
             self.draw_platforms_fallback(screen)
             self.all_sprites.draw(screen)
             return
 
         tile_size = tile_top_middle.get_width()
-        if tile_size == 0: return
+        if tile_size == 0: 
+            return
 
+        # === DRAW PLATFORMS ===
         for p in self.visible_platforms:
             x_on_screen = p.x - self.world_x_offset
             num_tiles_x = max(1, round(p.length / tile_size))
             start_row = max(0, int(-p.y / tile_size))
-            end_row = int((SCREEN_H - p.y) / tile_size) + 2
+            end_row = start_row + math.ceil(SCREEN_H / tile_size) + 1
             
             for j in range(start_row, end_row):
                 current_y = p.y + j * tile_size
-                if current_y > SCREEN_H: break
+                if current_y > SCREEN_H: 
+                    break
                 
                 if j == 0:
                     for i in range(num_tiles_x):
                         tile_to_draw = tile_top_middle
                         if num_tiles_x > 1:
-                            if i == 0: tile_to_draw = tile_top_left
-                            elif i == num_tiles_x - 1: tile_to_draw = tile_top_right
+                            if i == 0: 
+                                tile_to_draw = tile_top_left
+                            elif i == num_tiles_x - 1: 
+                                tile_to_draw = tile_top_right
                         if tile_to_draw:
                             screen.blit(tile_to_draw, (x_on_screen + i * tile_size, p.y))
                 else:
@@ -893,30 +902,65 @@ class PlayingState(GameState):
                     else:
                         screen.blit(tile_middle_left, (x_on_screen, current_y))
 
-        for wall_tile in self.visible_wall_tiles:
-            if wall_tile.width != 10: continue
+        # === DRAW WALL TILES (WITH DEBUG) ===
+        print(f"\n=== DRAW DEBUG ===")
+        print(f"Drawing {len(self.visible_wall_tiles)} wall tiles")
+        print(f"world_x_offset={self.world_x_offset}")
+        print(f"SCREEN_W={SCREEN_W}, SCREEN_H={SCREEN_H}")
+        print(f"GROUND_Y={GROUND_Y}")
+        
+        drawn_count = 0
+        for i, wall_tile in enumerate(self.visible_wall_tiles):
+            if wall_tile.width != 10: 
+                continue
 
+            # Convert world position to screen position
+            wall_screen_x = wall_tile.x - self.world_x_offset
+            wall_screen_y = wall_tile.y
+            
             wall_rect = pygame.Rect(
-                wall_tile.x - self.world_x_offset,
-                wall_tile.y,
+                wall_screen_x,
+                wall_screen_y,
                 wall_tile.width,
                 wall_tile.tile_height
             )
+            
+            # DEBUG: Print detailed info for each tile
+            is_visible = (wall_rect.right >= 0 and wall_rect.left <= SCREEN_W and 
+                         wall_rect.bottom >= 0 and wall_rect.top <= SCREEN_H)
+            
+            if i < 5:
+                print(f"  Tile {i}:")
+                print(f"    World pos: ({wall_tile.x}, {wall_tile.y})")
+                print(f"    Screen pos: ({wall_screen_x}, {wall_screen_y})")
+                print(f"    Rect: left={wall_rect.left}, right={wall_rect.right}, top={wall_rect.top}, bottom={wall_rect.bottom}")
+                print(f"    Visible: {is_visible}")
+            
+            # Only draw if visible on screen
             if wall_rect.right < 0 or wall_rect.left > SCREEN_W:
                 continue
+            if wall_rect.bottom < 0 or wall_rect.top > SCREEN_H:
+                continue
             
+            drawn_count += 1
+            
+            # Get the tile image to use
             tile_to_use = self.active_theme_tiles.get('wall_middle_left')
             if tile_to_use:
-                tile_height = tile_to_use.get_height()
-                if tile_height > 0:
-                    num_tiles_y = max(1, math.ceil(wall_rect.height / tile_height))
-                    for i in range(num_tiles_y):
-                        tile_y = wall_rect.top + i * tile_height
-                        if tile_y > SCREEN_H: break
-                        screen.blit(tile_to_use, (wall_rect.left, tile_y))
+                # Scale tile to match wall_tile dimensions
+                scaled_tile = pygame.transform.scale(tile_to_use, (wall_tile.width, wall_tile.tile_height))
+                screen.blit(scaled_tile, (int(wall_rect.x), int(wall_rect.y)))
+            else:
+                # Fallback: draw colored rectangle
+                pygame.draw.rect(screen, (100, 100, 80), wall_rect)
+        
+        print(f"Total drawn: {drawn_count} wall tiles")
+        print("=" * 40)
 
+        # === DRAW SPRITES ===
         self.all_sprites.draw(screen)
 
+        # === DRAW WALL CLIMB TIMER ===
         if self.player.wall_state.is_sliding:
             wall_time_ratio = self.player.wall_state.time_elapsed / WALL_CLIMB_TIME_LIMIT
             bar_width, bar_height = 200, 20

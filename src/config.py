@@ -1,6 +1,6 @@
 
 SCREEN_W = 1024
-SCREEN_H = 700
+SCREEN_H = 768
 FPS = 60
 
 # Player settings
