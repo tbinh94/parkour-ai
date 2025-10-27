@@ -185,15 +185,8 @@ class WallState:
 class TerrainGenerator:
     @staticmethod
     def straight(cursor_x, config):
-        # 🔥 FIX: Always use GROUND_Y from config, not hardcoded values
-        # If platform_y is provided but doesn't match GROUND_Y, use GROUND_Y
+        # Trust the platform_y from the JSON file. Fallback to GROUND_Y if not specified.
         plat_y = config.get("platform_y", GROUND_Y)
-        
-        # Override if platform_y looks like old hardcoded value
-        if plat_y != GROUND_Y:
-            print(f"⚠️ Level JSON has platform_y={plat_y}, overriding with GROUND_Y={GROUND_Y}")
-            plat_y = GROUND_Y
-        
         length = config.get("length", 500)
         platform = Platform(cursor_x, plat_y, length)
         obstacles = []
@@ -206,12 +199,8 @@ class TerrainGenerator:
 
     @staticmethod
     def stairs_up(cursor_x, config):
-        # 🔥 FIX: Use GROUND_Y instead of hardcoded values
+        # Trust the start_y from the JSON file.
         start_y = config.get("start_y", GROUND_Y)
-        if start_y != GROUND_Y:
-            print(f"⚠️ stairs_up: start_y={start_y} overridden with GROUND_Y={GROUND_Y}")
-            start_y = GROUND_Y
-            
         step_height = config.get("step_height", 40)
         step_width = config.get("step_width", 120)
         num_steps = config.get("step_count", 5)
@@ -234,12 +223,8 @@ class TerrainGenerator:
 
     @staticmethod
     def stairs_down(cursor_x, config):
-        # 🔥 FIX: Use GROUND_Y instead of hardcoded values
+        # Trust the start_y from the JSON file.
         start_y = config.get("start_y", GROUND_Y)
-        if start_y != GROUND_Y:
-            print(f"⚠️ stairs_down: start_y={start_y} overridden with GROUND_Y={GROUND_Y}")
-            start_y = GROUND_Y
-            
         step_height = config.get("step_height", 40)
         step_width = config.get("step_width", 100)
         num_steps = config.get("step_count", 5)
@@ -263,12 +248,8 @@ class TerrainGenerator:
     @staticmethod
     def gap(cursor_x, config):
         length = config.get("length", 500)
-        # 🔥 FIX: Use GROUND_Y instead of hardcoded values
+        # Trust the base_y from the JSON file.
         base_y = config.get("base_y", GROUND_Y)
-        if base_y != GROUND_Y:
-            print(f"⚠️ gap: base_y={base_y} overridden with GROUND_Y={GROUND_Y}")
-            base_y = GROUND_Y
-            
         platforms_data = config.get("platforms", [])
         platforms = []
         for p_data in platforms_data:
@@ -300,11 +281,8 @@ class TerrainGenerator:
     def wall_jump(cursor_x, config):
         wall_height = config.get("height", 250)
         shaft_width = config.get("shaft_width", 150)
-        # 🔥 FIX: Use GROUND_Y instead of hardcoded values
+        # Trust the entry_y from the JSON file.
         entry_y = config.get("entry_y", GROUND_Y)
-        if entry_y != GROUND_Y:
-            print(f"⚠️ wall_jump: entry_y={entry_y} overridden with GROUND_Y={GROUND_Y}")
-            entry_y = GROUND_Y
         
         entry_platform_len = 100
         exit_platform_len = 150
@@ -382,14 +360,19 @@ def load_level(path):
     else:
         world = []
         print(f"💡 Injecting a {SAFE_ZONE_DISTANCE}px safe zone at the start of the level.")
-        safe_zone_config = {"type": "straight", "platform_y": GROUND_Y, "length": SAFE_ZONE_DISTANCE, "obstacles": []}
+        # Determine the y of the very first platform from the JSON to create a matching safe zone
+        first_plat_y = GROUND_Y
+        if data.get("sections"):
+            first_plat_y = data["sections"][0].get("platform_y", data["sections"][0].get("start_y", GROUND_Y))
+
+        safe_zone_config = {"type": "straight", "platform_y": first_plat_y, "length": SAFE_ZONE_DISTANCE, "obstacles": []}
         safe_segment = TerrainGenerator.straight(0, safe_zone_config)
         world.append(safe_segment)
         cursor_x = SAFE_ZONE_DISTANCE
+        
         for sec in data.get("sections", []):
             terrain_type = sec.get("type", "straight")
             terrain_func = getattr(TerrainGenerator, terrain_type, TerrainGenerator.straight)
-            if 'start_y' in sec: sec['start_y'] = GROUND_Y 
             segment = terrain_func(cursor_x, sec)
             world.append(segment)
             cursor_x += segment["length"]
@@ -479,12 +462,13 @@ class Player(pygame.sprite.Sprite):
                 anim_cfg['frame_height'], anim_cfg['scale'], anim_cfg['speed']
             )
         self.image = self.animations[self.state]['frames'][self.current_frame]
-        # 🔥 FIX: Use midbottom to position player on ground correctly
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.bottom = y  # y is GROUND_Y, so bottom touches ground
-        self.hitbox = pygame.Rect(0, 0, PLAYER_W, PLAYER_H)
-        self.update_hitbox()
+        
+        # ✨ REFACTOR: The hitbox is now the source of truth for position.
+        self.hitbox = pygame.Rect(x, 0, PLAYER_W, PLAYER_H)
+        self.hitbox.bottom = y
+        
+        # The visual rect is positioned based on the hitbox.
+        self.rect = self.image.get_rect(midbottom=self.hitbox.midbottom)
 
     def load_spritesheet(self, path, num_frames, frame_w, frame_h, scale, anim_speed):
         frames = []
@@ -518,10 +502,6 @@ class Player(pygame.sprite.Sprite):
             self.vx = jump_vx
             self.wall_state.stop_slide()
 
-    def update_hitbox(self):
-        self.hitbox.centerx = self.rect.centerx
-        self.hitbox.bottom = self.rect.bottom
-
     def _check_wall_collision(self, test_rect, wall_tiles, world_x_offset):
         """Check collision with wall and return side or None"""
         for wall_tile in wall_tiles:
@@ -537,17 +517,11 @@ class Player(pygame.sprite.Sprite):
             
             overlap_left = test_rect.right - wall_screen_rect.left
             overlap_right = wall_screen_rect.right - test_rect.left
-            overlap_top = test_rect.bottom - wall_screen_rect.top
-            overlap_bottom = wall_screen_rect.bottom - test_rect.top
             
-            min_overlap = min(overlap_left, overlap_right, overlap_top, overlap_bottom)
-            
-            if min_overlap == overlap_left:
+            if overlap_left < overlap_right:
                 return ('right', wall_screen_rect, overlap_left)
-            elif min_overlap == overlap_right:
-                return ('left', wall_screen_rect, overlap_right)
             else:
-                return (None, None, 0)
+                return ('left', wall_screen_rect, overlap_right)
         
         return (None, None, 0)
 
@@ -555,12 +529,11 @@ class Player(pygame.sprite.Sprite):
         old_hitbox = self.hitbox.copy()
         self.wall_state.update(delta_time)
         
-        # Horizontal movement
-        self.rect.x += self.vx
+        # ✨ REFACTOR: Horizontal movement is applied to the hitbox.
+        self.hitbox.x += self.vx
         self.vx *= PLAYER_DRAG_COEFFICIENT
         if abs(self.vx) < 0.1:
             self.vx = 0
-        self.update_hitbox()
         
         # Wall collision
         if wall_tiles:
@@ -569,53 +542,44 @@ class Player(pygame.sprite.Sprite):
             if side:
                 if side == 'right' and self.vx >= 0:
                     self.hitbox.right = wall_rect.left
-                    self.rect.centerx = self.hitbox.centerx
                     self.vx = 0
                     self.wall_state.start_slide('right')
                 elif side == 'left' and self.vx <= 0:
                     self.hitbox.left = wall_rect.right
-                    self.rect.centerx = self.hitbox.centerx
                     self.vx = 0
                     self.wall_state.start_slide('left')
                 else:
                     self.wall_state.stop_slide()
             else:
                 self.wall_state.stop_slide()
-            
-            self.update_hitbox()
         
-        # Vertical movement
+        # ✨ REFACTOR: Vertical movement is applied to the hitbox.
         self.vy += GRAVITY
-        
         if self.wall_state.is_sliding and not self.on_ground:
             self.vy = min(self.vy, MAX_WALL_SLIDE_SPEED)
-        
-        self.rect.y += self.vy
-        self.update_hitbox()
+        self.hitbox.y += self.vy
         
         # Platform collision
         self.on_ground = False
         for p in platforms:
-            platform_screen_rect = pygame.Rect(p.x - world_x_offset, p.y, p.length, 10)
-            if self.hitbox.colliderect(platform_screen_rect):
-                # 🔥 IMPROVED: Better collision detection
-                # Check if player is falling onto platform (not jumping up through it)
-                if self.vy >= 0 and old_hitbox.bottom <= platform_screen_rect.top + 5:
+            platform_screen_rect = pygame.Rect(p.x - world_x_offset, p.y, p.length, 20)
+            
+            if self.hitbox.colliderect(platform_screen_rect) and self.vy >= 0:
+                if old_hitbox.bottom <= platform_screen_rect.top:
                     self.on_ground = True
                     self.vy = 0
-                    self.rect.bottom = platform_screen_rect.top
+                    # 🔥 FIX: Snap hitbox bottom to platform top
+                    self.hitbox.bottom = platform_screen_rect.top
                     self.wall_state.reset()
                     break
-        self.update_hitbox()
         
         # Check wall time limit
         if self.wall_state.is_sliding and not self.on_ground:
             if self.wall_state.time_elapsed > WALL_CLIMB_TIME_LIMIT:
                 return "WALL_TIME_EXCEEDED"
         
-        # Update animation
+        # Update animation state
         previous_state = self.state
-        
         if self.wall_state.is_sliding and not self.on_ground:
             self.state = 'wall_slide'
         elif not self.on_ground:
@@ -626,6 +590,7 @@ class Player(pygame.sprite.Sprite):
         if self.state != previous_state:
             self.current_frame = 0
         
+        # Update animation frame
         anim_to_play = 'jump' if self.state == 'wall_slide' else self.state
         current_anim = self.animations[anim_to_play]
         self.anim_timer += delta_time * 1000
@@ -642,7 +607,11 @@ class Player(pygame.sprite.Sprite):
         if self.wall_state.side == 'right':
             self.image = pygame.transform.flip(self.image, True, False)
         
+        # ✨ REFACTOR: Sync the visual rect to the final hitbox position.
+        self.rect.midbottom = self.hitbox.midbottom
+        
         return None
+
 
 # -------------------------
 # Game State Management
@@ -704,9 +673,10 @@ class PlayingState(GameState):
         self.real_obstacles.empty()
         self.fake_obstacles.empty()
         
-        # 🔥 FIX: Set player position correctly on ground
-        self.player.rect.x = PLAYER_TARGET_X
-        self.player.rect.bottom = GROUND_Y  # Bottom of player touches ground
+        # Set player's initial state
+        # ✨ REFACTOR: Set hitbox position directly
+        self.player.hitbox.x = PLAYER_TARGET_X
+        self.player.hitbox.bottom = GROUND_Y # Initial guess, corrected below
         self.player.vy = 0
         self.player.vx = 0
         self.player.on_ground = True
@@ -714,7 +684,6 @@ class PlayingState(GameState):
         self.player.current_frame = 0
         self.player.anim_timer = 0.0
         self.player.wall_state.reset()
-        self.player.update_hitbox()
         self.all_sprites.add(self.player)
         
         self.world_x_offset = 0
@@ -723,51 +692,56 @@ class PlayingState(GameState):
         if self.is_endless:
             self.active_segments.clear()
             self.cursor_x = 0
+            
+            # For endless, assume first pattern y or fallback to GROUND_Y
+            first_plat_y = GROUND_Y
+            if self.endless_manager and self.endless_manager.patterns:
+                first_plat_y = self.endless_manager.patterns[0].get("platform_y", GROUND_Y)
+
             print(f"💡 Creating a {SAFE_ZONE_DISTANCE}px safe zone for endless mode.")
-            safe_zone_config = {"type": "straight", "platform_y": GROUND_Y, 
+            safe_zone_config = {"type": "straight", "platform_y": first_plat_y, 
                               "length": SAFE_ZONE_DISTANCE, "obstacles": []}
             safe_segment = TerrainGenerator.straight(self.cursor_x, safe_zone_config)
             self.active_segments.append(safe_segment)
-            self.cursor_x += SAFE_ZONE_DISTANCE
             while self.cursor_x < self.world_x_offset + SCREEN_W * 1.5:
                 self._spawn_next_segment()
         else:
             self._create_fixed_level()
             
-        print("🔧 Priming initial platforms for collision...")
+        # CRITICAL: Find the correct starting platform and place the player on it.
         initial_segments = self.active_segments if self.is_endless else self.world_data
+        all_platforms = []
         for seg in initial_segments:
-            platforms = seg.get("platforms", [seg.get("platform")])
-            for p in platforms:
-                if p: self.visible_platforms.append(p)
-        print(f"  -> Primed with {len(self.visible_platforms)} platforms.")
+            platforms_in_seg = seg.get("platforms", [seg.get("platform")])
+            for p in platforms_in_seg:
+                if p:
+                    all_platforms.append(p)
         
-        # 🔥 CRITICAL FIX: Ensure player starts on ground
-        if self.visible_platforms:
-            # Find platform at player's X position
-            player_on_platform = False
-            for p in self.visible_platforms:
-                if p.x <= self.player.rect.centerx <= p.x + p.length:
-                    # Player is over this platform
-                    if abs(self.player.rect.bottom - p.y) < 5:
-                        self.player.rect.bottom = p.y
-                        self.player.on_ground = True
-                        self.player.vy = 0
-                        player_on_platform = True
-                        print(f"✓ Player placed on platform at y={p.y}")
-                        break
+        self.visible_platforms.clear()
+        self.visible_platforms.extend(all_platforms)
+
+        player_on_platform = False
+        if all_platforms:
+            for p in all_platforms:
+                if p.x <= self.player.hitbox.centerx < p.x + p.length:
+                    self.player.hitbox.bottom = p.y
+                    self.player.on_ground = True
+                    self.player.vy = 0
+                    player_on_platform = True
+                    print(f"✓ Player placed on starting platform at y={p.y}")
+                    break
             
             if not player_on_platform:
-                print(f"⚠️ WARNING: Player not on any platform!")
-                print(f"   Player X: {self.player.rect.centerx}, Y: {self.player.rect.bottom}")
-                print(f"   Available platforms:")
-                for i, p in enumerate(self.visible_platforms[:3]):
-                    print(f"     Platform {i}: x={p.x} to {p.x + p.length}, y={p.y}")
+                first_platform_y = all_platforms[0].y
+                self.player.hitbox.bottom = first_platform_y
+                self.player.on_ground = True
+                self.player.vy = 0
+                print(f"⚠️ Player not starting over any platform! Placing at first platform's height: y={first_platform_y}")
         else:
-            print("⚠️ WARNING: No platforms loaded!")
+            print("⚠️ CRITICAL WARNING: No platforms loaded in the level!")
         
-        self.player.update_hitbox()
-
+        # Sync rect to final starting position
+        self.player.rect.midbottom = self.player.hitbox.midbottom
 
     def _create_fixed_level(self):
         print("\n🎮 CREATING FIXED LEVEL")
@@ -779,6 +753,7 @@ class PlayingState(GameState):
     def _spawn_next_segment(self):
         pattern = self.endless_manager.get_next_pattern()
         if not pattern: return
+        
         terrain_type = pattern.get("type", "straight")
         terrain_func = getattr(TerrainGenerator, terrain_type, TerrainGenerator.straight)
         segment = terrain_func(self.cursor_x, pattern)
@@ -849,11 +824,11 @@ class PlayingState(GameState):
         )
         
         # Camera lock logic
-        current_screen_x = self.player.rect.x
+        current_screen_x = self.player.hitbox.x
         diff = current_screen_x - PLAYER_TARGET_X
         self.world_x_offset += diff
-        self.player.rect.x = PLAYER_TARGET_X
-        self.player.update_hitbox()
+        self.player.hitbox.x = PLAYER_TARGET_X
+        self.player.rect.midbottom = self.player.hitbox.midbottom # re-sync after camera adjust
 
         if wall_check == "WALL_TIME_EXCEEDED":
             print("Game Over: Wall time exceeded!")
@@ -871,7 +846,7 @@ class PlayingState(GameState):
             self.game.flip_state("game_over")
             return
 
-        if self.player.rect.top > SCREEN_H:
+        if self.player.hitbox.top > SCREEN_H:
             print("Player fell into the abyss! Game Over.")
             self.game.flip_state("game_over")
             return

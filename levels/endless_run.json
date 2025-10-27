@@ -1,55 +1,73 @@
 {
   "mode": "endless",
   "theme": "abyss_ruins",
-  "initial_speed": 5,
-  "speed_scale_over_time": 0.03,
   "metadata": {
     "display_name": "∞ Endless Abyss",
     "description": "Run forever over changing terrain.",
-    "difficulty": "Scaling",
-    "badge": "🔥 Survival Mode",
-    "is_always_visible": true
+    "difficulty": "Scaling"
+  },
+  "spawn_logic": {
+    "order": "random",
+    "avoid_consecutive_same": true
   },
   "patterns": [
     {
-      "id": "flat_basic",
+      "id": "flat_empty_short",
       "type": "straight",
-      "length": 400,
+      "length": 300,
+      "platform_y": 360,
+      "obstacles": []
+    },
+    {
+      "id": "flat_basic_long",
+      "type": "straight",
+      "length": 600,
       "platform_y": 360,
       "obstacles": [
-        { "x": 200, "y": "ground", "kind": "fake" }
+        { "x": 300, "y": "ground", "kind": "fake" }
       ]
     },
     {
-      "id": "flat_empty",
+      "id": "flat_double_obstacle",
       "type": "straight",
       "length": 500,
       "platform_y": 360,
+      "obstacles": [
+        { "x": 150, "y": "ground", "kind": "fake" },
+        { "x": 350, "y": "ground", "kind": "real" }
+      ]
+    },
+    {
+      "id": "gap_simple",
+      "type": "gap",
+      "length": 400,
+      "base_y": 360,
+      "platforms": [
+        { "x": 0, "width": 150 },
+        { "x": 280, "width": 120 }
+      ],
       "obstacles": []
     },
     {
-      "id": "vertical_wall_up",
-      "type": "wall_jump",
-      "height_change": 200,
-      "direction": "up",
-      "shaft_width": 130,
-      "length": 100,
-      "obstacles": []
+      "id": "gap_with_obstacle",
+      "type": "gap",
+      "length": 500,
+      "base_y": 360,
+      "platforms": [
+        { "x": 0, "width": 200 },
+        { "x": 350, "width": 150 }
+      ],
+      "obstacles": [
+         { "platform_index": 1, "x": 75, "kind": "real" }
+      ]
     },
     {
-      "id": "vertical_wall_down",
+      "id": "wall_climb_up",
       "type": "wall_jump",
-      "height_change": -200,
-      "direction": "down",
-      "shaft_width": 130,
-      "length": 100,
+      "entry_y": 360,
+      "height": 200,
+      "shaft_width": 150,
       "obstacles": []
     }
-  ],
-  "spawn_logic": {
-    "order": "random",
-    "allow_repeats": true,
-    "avoid_consecutive_same": true,
-    "y_connect_logic": "smooth"
-  }
+  ]
 }
